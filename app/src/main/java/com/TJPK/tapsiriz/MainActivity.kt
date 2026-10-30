@@ -32,7 +32,7 @@ import com.TJPK.tapsiriz.presentation.schedule.ScheduleUiEvent
 import com.TJPK.tapsiriz.presentation.schedule.ScheduleUiState
 import com.TJPK.tapsiriz.presentation.schedule.ScheduleViewModel
 import com.TJPK.tapsiriz.presentation.settings.SettingsScreen
-import com.TJPK.tapsiriz.ui.theme.TapcirizTheme
+import com.TJPK.tapsiriz.ui.theme.TapsirizTheme
 
 /**
  * Экраны навигации приложения
@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            TapcirizTheme {
+            TapsirizTheme {
                 val userManager = remember { UserManager(applicationContext) }
                 var currentScreen by remember {
                     mutableStateOf(if (userManager.isLoggedIn()) AppScreen.SCHEDULE else AppScreen.AUTH)
@@ -139,7 +139,7 @@ class MainActivity : ComponentActivity() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ScheduleScreenPreview() {
-    TapcirizTheme {
+    TapsirizTheme {
         ScheduleScreenContent(
             state = ScheduleUiState(
                 groups = MockScheduleData.groups,
@@ -158,7 +158,7 @@ fun ScheduleScreenPreview() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AuthScreenPreview() {
-    TapcirizTheme {
+    TapsirizTheme {
         AuthScreen(
             groups = MockScheduleData.groups,
             onAuthSuccess = {},
@@ -170,7 +170,7 @@ fun AuthScreenPreview() {
 @Preview(showBackground = true, showSystemUi = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun ScheduleScreenDarkPreview() {
-    TapcirizTheme(darkTheme = true) {
+    TapsirizTheme(darkTheme = true) {
         ScheduleScreenContent(
             state = ScheduleUiState(
                 groups = MockScheduleData.groups,
