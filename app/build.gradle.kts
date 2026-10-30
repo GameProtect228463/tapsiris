@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.TJPK.tapciriz"
+    namespace = "com.TJPK.tapsiriz"
     compileSdk {
         version = release(37)
     }
