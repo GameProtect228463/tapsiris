@@ -28,11 +28,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -72,7 +72,6 @@ import com.TJPK.tapciriz.presentation.components.BellScheduleDialog
 import com.TJPK.tapciriz.presentation.components.DaySelector
 import com.TJPK.tapciriz.presentation.components.GroupSelectSheet
 import com.TJPK.tapciriz.presentation.components.LessonCard
-import com.TJPK.tapciriz.presentation.components.ServerSettingsDialog
 
 /**
  * =========================================================================================
@@ -82,10 +81,10 @@ import com.TJPK.tapciriz.presentation.components.ServerSettingsDialog
  * Все действия пользователя передаются через метод [ScheduleViewModel.onEvent].
  * =========================================================================================
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleScreen(
-    viewModel: ScheduleViewModel
+    viewModel: ScheduleViewModel,
+    onOpenSettings: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -101,7 +100,8 @@ fun ScheduleScreen(
     ScheduleScreenContent(
         state = state,
         snackbarHostState = snackbarHostState,
-        onEvent = viewModel::onEvent
+        onEvent = viewModel::onEvent,
+        onOpenSettings = onOpenSettings
     )
 }
 
@@ -114,11 +114,11 @@ fun ScheduleScreen(
 fun ScheduleScreenContent(
     state: ScheduleUiState,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    onEvent: (ScheduleUiEvent) -> Unit = {}
+    onEvent: (ScheduleUiEvent) -> Unit = {},
+    onOpenSettings: () -> Unit = {}
 ) {
     var showGroupSheet by remember { mutableStateOf(false) }
     var showBellsDialog by remember { mutableStateOf(false) }
-    var showServerDialog by remember { mutableStateOf(false) }
     val groupSheetState = rememberModalBottomSheetState()
 
     // Анимация вращения кнопки обновления
@@ -183,12 +183,11 @@ fun ScheduleScreenContent(
                         )
                     }
 
-                    IconButton(onClick = { showServerDialog = true }) {
+                    // Кнопка настроек приложения
+                    IconButton(onClick = onOpenSettings) {
                         Icon(
-                            imageVector = Icons.Default.Dns,
-                            contentDescription = "Сервер 1С",
-                            tint = if (state.is1CConnected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Настройки"
                         )
                     }
 
@@ -249,7 +248,7 @@ fun ScheduleScreenContent(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { showServerDialog = true }
+                    modifier = Modifier.clickable { onOpenSettings() }
                 ) {
                     Box(
                         modifier = Modifier
@@ -423,14 +422,6 @@ fun ScheduleScreenContent(
         BellScheduleDialog(
             bells = state.bells,
             onDismiss = { showBellsDialog = false }
-        )
-    }
-
-    if (showServerDialog) {
-        ServerSettingsDialog(
-            currentConfig = state.serverConfig,
-            onDismiss = { showServerDialog = false },
-            onSave = { onEvent(ScheduleUiEvent.UpdateServerConfig(it)) }
         )
     }
 }
