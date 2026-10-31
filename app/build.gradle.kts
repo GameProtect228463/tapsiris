@@ -13,8 +13,8 @@ android {
         applicationId = "com.TJPK.tapsiris"
         minSdk = 24
         targetSdk = 37
-        versionCode = 2
-        versionName = "0.0.1-concept"
+        versionCode = 3
+        versionName = "0.0.1-concept.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -47,6 +47,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.11.0") // или более свежая версия
+    implementation("androidx.compose.material3:material3")
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

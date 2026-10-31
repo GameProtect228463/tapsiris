@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.appcompat.app.AppCompatActivity
 import com.TJPK.tapsiris.data.local.OneCSettingsManager
 import com.TJPK.tapsiris.data.local.UserManager
 import com.TJPK.tapsiris.data.mock.MockScheduleData
@@ -33,6 +34,7 @@ import com.TJPK.tapsiris.presentation.schedule.ScheduleUiState
 import com.TJPK.tapsiris.presentation.schedule.ScheduleViewModel
 import com.TJPK.tapsiris.presentation.settings.SettingsScreen
 import com.TJPK.tapsiris.ui.theme.TapsirizTheme
+import com.TJPK.tapsiris.utils.LanguageManager
 
 /**
  * Экраны навигации приложения
@@ -50,7 +52,7 @@ enum class AppScreen {
  * и управляет переходами между экранами авторизации, расписания и настроек.
  * =========================================================================================
  */
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private val viewModel: ScheduleViewModel by viewModels {
         object : ViewModelProvider.Factory {
@@ -64,6 +66,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        LanguageManager.applySavedLanguage(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {

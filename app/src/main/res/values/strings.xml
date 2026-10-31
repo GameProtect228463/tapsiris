@@ -1,8 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <resources>
     <string name="app_name">Tapsiris concept</string>
     <string name="settings_language">Язык интерфейса</string>
     <string name="language_ru">Русский</string>
     <string name="language_kk">Қазақша</string>
     <string name="language_us">English</string>
+    <string name="settings_name">Настройки</string>
+    <string name="back">Назад</string>
+    <string name="auto_sync_subtitle">Проверять изменения в 1С при запуске</string>
+    <string name="integration_1c">Интеграция с 1С:Колледж</string>
+    <string name="server_params_1c">Параметры сервера 1С</string>
+    <string name="address_not_configured">Адрес не настроен</string>
+    <string name="about_app">О приложении</string>
+    <string name="app_title_full">Тапсырыс — Расписание колледжа</string>
+    <string name="app_system_subtitle">Информационная система для студентов</string>
+    <string name="app_version">Версия приложения</string>
+    <string name="app_version_number">v0.0.1-concept (Сборка 2026.10)</string>
+    <string name="select_language_title">Выберите язык / Тілді таңдаңыз</string>
+    <string name="cancel">Отмена</string>
+    <string name="server_settings_saved">Настройки сервера 1С сохранены</string>
+    <string name="student_profile">Профиль студента</string>
+    <string name="group">Группа</string>
+    <string name="guest_access">Гостевой доступ</string>
+    <string name="login_accaunt">Войти в свой аккаунт</string>
+    <string name="out_accaunt">Выйти из аккаунта</string>
+    <string name="interface_name">Интерфейс</string>
+    <string name="app_language">Язык приложения</string>
+    <string name="schedule_parameters">Параметры расписания</string>
+    <string name="remind_about_couples">Напоминать о парах</string>
+    <string name="notification_couples">Уведомление за 15 минут до начала занятия</string>
+    <string name="auto_sync">Автосинхронизация</string>
+    <string name="err_enter_login">Введите логин или номер студбилета</string>
+    <string name="err_enter_password">Введите пароль</string>
+    <string name="err_enter_full_name">Введите ваше ФИО</string>
+    <string name="err_create_login">Придумайте логин или укажите студбилет</string>
+    <string name="err_password_short">Пароль должен содержать минимум 4 символа</string>
+    <string name="student_prefix">Студент</string>
+    <string name="tab_login">Вход</string>
+    <string name="tab_register">Регистрация</string>
+    <string name="label_full_name">ФИО студента</string>
+    <string name="placeholder_full_name">Иванов Иван Иванович</string>
+    <string name="label_study_group">Учебная группа</string>
+    <string name="course_suffix">курс</string>
+    <string name="label_login_id">Логин или № студбилета</string>
+    <string name="label_create_login">Придумайте логин</string>
+    <string name="label_password">Пароль</string>
+    <string name="btn_sign_in">Войти</string>
+    <string name="btn_register">Зарегистрироваться</string>
+    <string name="btn_continue_guest">Продолжить без регистрации</string>
+    <string name="sync_info_1c">Данные расписания синхронизируются с сервером 1С колледжа</string>
 </resources>

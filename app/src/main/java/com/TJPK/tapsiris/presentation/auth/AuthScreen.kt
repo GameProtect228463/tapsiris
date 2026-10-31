@@ -3,8 +3,10 @@ package com.TJPK.tapsiris.presentation.auth
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
@@ -38,6 +41,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,16 +52,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.TJPK.tapsiris.R
 import com.TJPK.tapsiris.data.local.UserProfile
 import com.TJPK.tapsiris.data.mock.MockScheduleData
 import com.TJPK.tapsiris.domain.model.StudentGroup
 import com.TJPK.tapsiris.presentation.components.GroupSelectSheet
+import com.TJPK.tapsiris.presentation.settings.LanguageSelectDialog
+import com.TJPK.tapsiris.utils.LanguageManager
 
 /**
  * =========================================================================================
@@ -72,6 +81,7 @@ fun AuthScreen(
     onAuthSuccess: (UserProfile) -> Unit,
     onGuestLogin: (String) -> Unit
 ) {
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     // 0 = Вход, 1 = Регистрация
@@ -87,23 +97,31 @@ fun AuthScreen(
     // Ошибки валидации
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Шторка выбора группы
+    // Шторка выбора группы и диалог языка
     var showGroupSheet by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
     val groupSheetState = rememberModalBottomSheetState()
+
+    val errEnterLogin = stringResource(R.string.err_enter_login)
+    val errEnterPassword = stringResource(R.string.err_enter_password)
+    val errEnterFullName = stringResource(R.string.err_enter_full_name)
+    val errCreateLogin = stringResource(R.string.err_create_login)
+    val errPasswordShort = stringResource(R.string.err_password_short)
+    val defaultStudentPrefix = stringResource(R.string.student_prefix)
 
     fun handleLogin() {
         if (loginInput.isBlank()) {
-            errorMessage = "Введите логин или номер студбилета"
+            errorMessage = errEnterLogin
             return
         }
         if (passwordInput.isBlank()) {
-            errorMessage = "Введите пароль"
+            errorMessage = errEnterPassword
             return
         }
         errorMessage = null
         onAuthSuccess(
             UserProfile(
-                fullName = if (fullNameInput.isNotBlank()) fullNameInput else "Студент ${loginInput.trim()}",
+                fullName = if (fullNameInput.isNotBlank()) fullNameInput else "$defaultStudentPrefix ${loginInput.trim()}",
                 login = loginInput.trim(),
                 groupName = selectedGroup.name,
                 isGuest = false
@@ -113,15 +131,15 @@ fun AuthScreen(
 
     fun handleRegister() {
         if (fullNameInput.isBlank()) {
-            errorMessage = "Введите ваше ФИО"
+            errorMessage = errEnterFullName
             return
         }
         if (loginInput.isBlank()) {
-            errorMessage = "Придумайте логин или укажите студбилет"
+            errorMessage = errCreateLogin
             return
         }
         if (passwordInput.length < 4) {
-            errorMessage = "Пароль должен содержать минимум 4 символа"
+            errorMessage = errPasswordShort
             return
         }
         errorMessage = null
@@ -146,7 +164,25 @@ fun AuthScreen(
                 .padding(horizontal = 24.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            // Кнопка смены языка в правом верхнем углу
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = { showLanguageDialog = true }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Language,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text(text = stringResource(R.string.settings_language))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Логотип и брендинг колледжа
             Box(
@@ -167,14 +203,14 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Тапсырыс",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
-                text = "Расписание занятий для студентов колледжа",
+                text = stringResource(R.string.app_system_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -207,7 +243,7 @@ fun AuthScreen(
                                 selectedTab = 0
                                 errorMessage = null
                             },
-                            text = { Text("Вход", fontWeight = FontWeight.SemiBold) }
+                            text = { Text(stringResource(R.string.tab_login), fontWeight = FontWeight.SemiBold) }
                         )
                         Tab(
                             selected = selectedTab == 1,
@@ -215,7 +251,7 @@ fun AuthScreen(
                                 selectedTab = 1
                                 errorMessage = null
                             },
-                            text = { Text("Регистрация", fontWeight = FontWeight.SemiBold) }
+                            text = { Text(stringResource(R.string.tab_register), fontWeight = FontWeight.SemiBold) }
                         )
                     }
 
@@ -226,8 +262,8 @@ fun AuthScreen(
                         OutlinedTextField(
                             value = fullNameInput,
                             onValueChange = { fullNameInput = it },
-                            label = { Text("ФИО студента") },
-                            placeholder = { Text("Иванов Иван Иванович") },
+                            label = { Text(stringResource(R.string.label_full_name)) },
+                            placeholder = { Text(stringResource(R.string.placeholder_full_name)) },
                             leadingIcon = {
                                 Icon(imageVector = Icons.Default.Person, contentDescription = null)
                             },
@@ -239,22 +275,23 @@ fun AuthScreen(
                     }
 
                     // Поле выбора учебной группы
+                    val courseText = stringResource(R.string.course_suffix)
                     OutlinedTextField(
-                        value = "${selectedGroup.name} (${selectedGroup.course} курс)",
+                        value = "${selectedGroup.name} (${selectedGroup.course} $courseText)",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Учебная группа") },
+                        label = { Text(stringResource(R.string.label_study_group)) },
                         leadingIcon = {
                             Icon(imageVector = Icons.Default.Badge, contentDescription = null)
                         },
                         trailingIcon = {
-                            Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Выбрать группу")
+                            Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
                         },
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { showGroupSheet = true },
-                        enabled = false, // клик перехватывается родителем
+                        enabled = false,
                         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                             disabledTextColor = MaterialTheme.colorScheme.onSurface,
                             disabledBorderColor = MaterialTheme.colorScheme.outline,
@@ -270,7 +307,7 @@ fun AuthScreen(
                     OutlinedTextField(
                         value = loginInput,
                         onValueChange = { loginInput = it },
-                        label = { Text(if (selectedTab == 0) "Логин или № студбилета" else "Придумайте логин") },
+                        label = { Text(if (selectedTab == 0) stringResource(R.string.label_login_id) else stringResource(R.string.label_create_login)) },
                         leadingIcon = {
                             Icon(imageVector = Icons.Default.Person, contentDescription = null)
                         },
@@ -285,7 +322,7 @@ fun AuthScreen(
                     OutlinedTextField(
                         value = passwordInput,
                         onValueChange = { passwordInput = it },
-                        label = { Text("Пароль") },
+                        label = { Text(stringResource(R.string.label_password)) },
                         leadingIcon = {
                             Icon(imageVector = Icons.Default.Lock, contentDescription = null)
                         },
@@ -328,7 +365,7 @@ fun AuthScreen(
                         shape = RoundedCornerShape(14.dp)
                     ) {
                         Text(
-                            text = if (selectedTab == 0) "Войти" else "Зарегистрироваться",
+                            text = if (selectedTab == 0) stringResource(R.string.btn_sign_in) else stringResource(R.string.btn_register),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -347,7 +384,7 @@ fun AuthScreen(
                         shape = RoundedCornerShape(14.dp)
                     ) {
                         Text(
-                            text = "Продолжить без регистрации",
+                            text = stringResource(R.string.btn_continue_guest),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -358,7 +395,7 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Данные расписания синхронизируются с сервером 1С колледжа",
+                text = stringResource(R.string.sync_info_1c),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
@@ -376,6 +413,17 @@ fun AuthScreen(
             onDismiss = { showGroupSheet = false },
             onGroupSelected = {
                 selectedGroup = it
+            }
+        )
+    }
+
+    // Диалог выбора языка
+    if (showLanguageDialog) {
+        LanguageSelectDialog(
+            onDismiss = { showLanguageDialog = false },
+            onLanguageSelected = { langCode ->
+                LanguageManager.setLanguage(context, langCode)
+                showLanguageDialog = false
             }
         )
     }

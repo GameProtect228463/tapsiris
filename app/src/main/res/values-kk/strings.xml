@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="app_name">Tapsiris concept</string>
+    <string name="settings_language">Интерфейс тілі</string>
+    <string name="language_ru">Русский</string>
+    <string name="language_kk">Қазақша</string>
+    <string name="language_us">English</string>
+    <string name="settings_name">Настройки</string>
+    <string name="back">Артқа</string>
+    <string name="auto_sync_subtitle">Іске қосу кезінде 1С өзгерістерін тексеру</string>
+    <string name="integration_1c">1С:Колледж интеграциясы</string>
+    <string name="server_params_1c">1С сервер параметрлері</string>
+    <string name="address_not_configured">Мекенжай бапталмаған</string>
+    <string name="about_app">Қолданба туралы</string>
+    <string name="app_title_full">Тапсырыс — Колледж кестесі</string>
+    <string name="app_system_subtitle">Студенттерге арналған ақпараттық жүйе</string>
+    <string name="app_version">Қолданба нұсқасы</string>
+    <string name="app_version_number">v0.0.1-concept (Құрастыру 2026.10)</string>
+    <string name="select_language_title">Тілді таңдаңыз / Выберите язык</string>
+    <string name="cancel">Болдырмау</string>
+    <string name="server_settings_saved">1С сервер параметрлері сақталды</string>
+    <string name="student_profile">Студент профилі</string>
+    <string name="group">Топ</string>
+    <string name="guest_access">Қонақ қолжетімділігі</string>
+    <string name="login_accaunt">Өз аккаунтыңызға кіру</string>
+    <string name="out_accaunt">Аккаунттан шығу</string>
+    <string name="interface_name">Интерфейс</string>
+    <string name="app_language">Қолданба тілі</string>
+    <string name="schedule_parameters">Кесте параметрлері</string>
+    <string name="remind_about_couples">Сабақтар туралы еске салу</string>
+    <string name="notification_couples">Сабақ басталуға 15 минут қалғанда хабарлама</string>
+    <string name="auto_sync">Автосинхронизация</string>
+    <string name="err_enter_login">Логинді или студенттік билет нөмірін енгізіңіз</string>
+    <string name="err_enter_password">Кұпиясөзді енгізіңіз</string>
+    <string name="err_enter_full_name">Толық аты-жөніңізді енгізіңіз</string>
+    <string name="err_create_login">Логин ойлап табыңыз немесе студбилетті көрсетіңіз</string>
+    <string name="err_password_short">Құпиясөз кемінде 4 таңбадан тұруы керек</string>
+    <string name="student_prefix">Студент</string>
+    <string name="tab_login">Кіру</string>
+    <string name="tab_register">Тіркелу</string>
+    <string name="label_full_name">Студенттің АЖТ</string>
+    <string name="placeholder_full_name">Ахметов Асан Әлиұлы</string>
+    <string name="label_study_group">Оқу тобы</string>
+    <string name="course_suffix">курс</string>
+    <string name="label_login_id">Логин немесе студбилет №</string>
+    <string name="label_create_login">Логин ойлап табыңыз</string>
+    <string name="label_password">Құпиясөз</string>
+    <string name="btn_sign_in">Кіру</string>
+    <string name="btn_register">Тіркелу</string>
+    <string name="btn_continue_guest">Тіркелусіз жалғастыру</string>
+    <string name="sync_info_1c">Кесте деректері колледждің 1С серверімен синхрондалады</string>
+</resources>

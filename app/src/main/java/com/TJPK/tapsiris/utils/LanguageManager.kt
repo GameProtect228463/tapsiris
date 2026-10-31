@@ -16,6 +16,9 @@ object LanguageManager {
         // 2. Применяем язык динамически на лету
         val appLocale = LocaleListCompat.forLanguageTags(languageCode)
         AppCompatDelegate.setApplicationLocales(appLocale)
+
+        // 3. Принудительно перезапускаем активити для мгновенного применения локали
+        (context as? android.app.Activity)?.recreate()
     }
 
     fun applySavedLanguage(context: Context) {

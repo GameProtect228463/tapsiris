@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="app_name">Tapsiris concept</string>
+    <string name="settings_language">Interface language</string>
+    <string name="language_ru">Русский</string>
+    <string name="language_kk">Қазақша</string>
+    <string name="language_us">English</string>
+    <string name="settings_name">Settings</string>
+    <string name="back">Back</string>
+    <string name="auto_sync_subtitle">Check 1C updates on startup</string>
+    <string name="integration_1c">1C:College Integration</string>
+    <string name="server_params_1c">1C Server Settings</string>
+    <string name="address_not_configured">Address not configured</string>
+    <string name="about_app">About App</string>
+    <string name="app_title_full">Tapsyrys — College Schedule</string>
+    <string name="app_system_subtitle">Information system for students</string>
+    <string name="app_version">App Version</string>
+    <string name="app_version_number">v0.0.1-concept (Build 2026.10)</string>
+    <string name="select_language_title">Select Language / Тілді таңдаңыз</string>
+    <string name="cancel">Cancel</string>
+    <string name="server_settings_saved">1C server settings saved</string>
+    <string name="student_profile">Student Profile</string>
+    <string name="group">Group</string>
+    <string name="guest_access">Guest access</string>
+    <string name="login_accaunt">Sign in to your account</string>
+    <string name="out_accaunt">Log out</string>
+    <string name="interface_name">Interface</string>
+    <string name="app_language">App Language</string>
+    <string name="schedule_parameters">Schedule Parameters</string>
+    <string name="remind_about_couples">Remind about classes</string>
+    <string name="notification_couples">Notification 15 minutes before class</string>
+    <string name="auto_sync">Auto-sync</string>
+    <string name="err_enter_login">Enter login or student ID</string>
+    <string name="err_enter_password">Enter password</string>
+    <string name="err_enter_full_name">Enter your full name</string>
+    <string name="err_create_login">Create a login or enter student ID</string>
+    <string name="err_password_short">Password must be at least 4 characters</string>
+    <string name="student_prefix">Student</string>
+    <string name="tab_login">Sign In</string>
+    <string name="tab_register">Register</string>
+    <string name="label_full_name">Student Full Name</string>
+    <string name="placeholder_full_name">John Doe</string>
+    <string name="label_study_group">Study group</string>
+    <string name="course_suffix">year</string>
+    <string name="label_login_id">Login or Student ID</string>
+    <string name="label_create_login">Create login</string>
+    <string name="label_password">Password</string>
+    <string name="btn_sign_in">Sign In</string>
+    <string name="btn_register">Register</string>
+    <string name="btn_continue_guest">Continue as guest</string>
+    <string name="sync_info_1c">Schedule data is synced with the college 1C server</string>
+</resources>

@@ -59,10 +59,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import com.TJPK.tapsiris.data.local.UserProfile
 import com.TJPK.tapsiris.data.remote.ServerConfig
 import com.TJPK.tapsiris.presentation.components.ServerSettingsDialog
 import com.TJPK.tapsiris.utils.LanguageManager
+import com.TJPK.tapsiris.R
 import kotlinx.coroutines.launch
 
 /**
@@ -70,6 +72,7 @@ import kotlinx.coroutines.launch
  * СЛОЙ PRESENTATION / SETTINGS: Экран настроек приложения.
  * =========================================================================================
  */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -92,6 +95,7 @@ fun SettingsScreen(
     // Счётчик кликов на версию приложения (Пасхалка)
     var versionClicksCount by remember { mutableIntStateOf(0) }
     var showEasterEggVideo by remember { mutableStateOf(false) }
+    val message = stringResource(R.string.server_settings_saved)
 
     fun handleVersionClick() {
         val newClicks = versionClicksCount + 1
@@ -109,7 +113,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Настройки",
+                        text = stringResource(R.string.settings_name),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -118,7 +122,7 @@ fun SettingsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -137,7 +141,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Раздел: Профиль студента
-            SettingsSectionTitle(title = "Профиль студента")
+            SettingsSectionTitle(title = stringResource(R.string.student_profile))
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -174,7 +178,7 @@ fun SettingsScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Группа: ${userProfile.groupName} • ${if (userProfile.isGuest) "Гостевой доступ" else "@" + userProfile.login}",
+                                text = "${stringResource(R.string.group)}: ${userProfile.groupName} • ${if (userProfile.isGuest) stringResource(R.string.guest_access) else "@" + userProfile.login}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -198,7 +202,7 @@ fun SettingsScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (userProfile.isGuest) "Войти в свой аккаунт" else "Выйти из аккаунта",
+                            text = if (userProfile.isGuest) stringResource(R.string.login_accaunt) else stringResource(R.string.out_accaunt),
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -206,7 +210,7 @@ fun SettingsScreen(
             }
 
             // Раздел: Интерфейс (Смена языка)
-            SettingsSectionTitle(title = "Интерфейс")
+            SettingsSectionTitle(title = stringResource(R.string.interface_name))
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -217,7 +221,7 @@ fun SettingsScreen(
                 Column {
                     SettingsActionItem(
                         icon = Icons.Default.Language,
-                        title = "Язык приложения",
+                        title = stringResource(R.string.app_language),
                         subtitle = "Русский / Қазақша / English",
                         onClick = { showLanguageDialog = true }
                     )
@@ -225,7 +229,7 @@ fun SettingsScreen(
             }
 
             // Раздел: Уведомления и синхронизация
-            SettingsSectionTitle(title = "Параметры расписания")
+            SettingsSectionTitle(title = stringResource(R.string.schedule_parameters))
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -236,16 +240,16 @@ fun SettingsScreen(
                 Column {
                     SettingsSwitchItem(
                         icon = Icons.Default.Notifications,
-                        title = "Напоминать о парах",
-                        subtitle = "Уведомление за 15 минут до начала занятия",
+                        title = stringResource(R.string.remind_about_couples),
+                        subtitle = stringResource(R.string.notification_couples),
                         checked = notifyBeforeLessons,
                         onCheckedChange = { notifyBeforeLessons = it }
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsSwitchItem(
                         icon = Icons.Default.School,
-                        title = "Автосинхронизация",
-                        subtitle = "Проверять изменения в 1С при запуске",
+                        title = stringResource(R.string.auto_sync),
+                        subtitle = stringResource(R.string.auto_sync_subtitle),
                         checked = autoSyncSchedule,
                         onCheckedChange = { autoSyncSchedule = it }
                     )
@@ -253,7 +257,7 @@ fun SettingsScreen(
             }
 
             // Раздел: Подключение к серверу 1С
-            SettingsSectionTitle(title = "Интеграция с 1С:Колледж")
+            SettingsSectionTitle(title = stringResource(R.string.integration_1c))
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -264,15 +268,15 @@ fun SettingsScreen(
                 Column {
                     SettingsActionItem(
                         icon = Icons.Default.Dns,
-                        title = "Параметры сервера 1С",
-                        subtitle = serverConfig.serverUrl.ifBlank { "Адрес не настроен" },
+                        title = stringResource(R.string.server_params_1c),
+                        subtitle = serverConfig.serverUrl.ifBlank { stringResource(R.string.address_not_configured) },
                         onClick = { show1CDialog = true }
                     )
                 }
             }
 
             // Раздел: О приложении
-            SettingsSectionTitle(title = "О приложении")
+            SettingsSectionTitle(title = stringResource(R.string.about_app))
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -283,8 +287,8 @@ fun SettingsScreen(
                 Column {
                     SettingsActionItem(
                         icon = Icons.Default.Info,
-                        title = "Тапсырыс — Расписание колледжа",
-                        subtitle = "Информационная система для студентов",
+                        title = stringResource(R.string.app_title_full),
+                        subtitle = stringResource(R.string.app_system_subtitle),
                         onClick = {}
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -305,12 +309,12 @@ fun SettingsScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Версия приложения",
+                                    text = stringResource(R.string.app_version),
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium
                                 )
                                 Text(
-                                    text = "v0.0.1-concept (Сборка 2026.10)",
+                                    text = stringResource(R.string.app_version_number),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -328,7 +332,7 @@ fun SettingsScreen(
     if (showLanguageDialog) {
         AlertDialog(
             onDismissRequest = { showLanguageDialog = false },
-            title = { Text(text = "Выберите язык / Тілді таңдаңыз") },
+            title = { Text(text = stringResource(R.string.select_language_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     LanguageOption(title = "Қазақша", code = "kk", context = context, onSelected = { showLanguageDialog = false })
@@ -338,7 +342,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showLanguageDialog = false }) {
-                    Text("Отмена")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -352,7 +356,7 @@ fun SettingsScreen(
             onSave = {
                 onSaveServerConfig(it)
                 coroutineScope.launch {
-                    snackbarHostState.showSnackbar("Настройки сервера 1С сохранены")
+                    snackbarHostState.showSnackbar(message)
                 }
             }
         )
