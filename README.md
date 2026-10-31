@@ -59,7 +59,7 @@ flowchart TD
 
 ## 2. Назначение пакетов и модулей (Где что находится и для чего)
 
-### 📁 `com.TJPK.tapciriz.domain` — Слой бизнес-логики (Domain)
+### 📁 `com.TJPK.tapciris.domain` — Слой бизнес-логики (Domain)
 - **`model/ScheduleModels.kt`**:
   - `Lesson` — отдельное занятие (номер пары, время, предмет, преподаватель, аудитория, тип, замена).
   - `DaySchedule` — день расписания (название, дата, список пар, флаг замен).
@@ -71,7 +71,7 @@ flowchart TD
 
 ---
 
-### 📁 `com.TJPK.tapciriz.data` — Слой данных (Data)
+### 📁 `com.TJPK.tapciris.data` — Слой данных (Data)
 - **`local/UserManager.kt`**:
   - Управление сессией студента (`isLoggedIn()`, `getUserProfile()`, `saveUser()`, `loginAsGuest()`, `logout()`).
 - **`local/OneCSettingsManager.kt`**:
@@ -87,7 +87,7 @@ flowchart TD
 
 ---
 
-### 📁 `com.TJPK.tapciriz.presentation` — Слой интерфейса (Presentation / UI)
+### 📁 `com.TJPK.tapciris.presentation` — Слой интерфейса (Presentation / UI)
 - **`auth/AuthScreen.kt`**:
   - Экран входа и регистрации студента при первом запуске (табы Вход/Регистрация, выбор группы, гостевой доступ).
 - **`settings/SettingsScreen.kt`**:
