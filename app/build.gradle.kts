@@ -4,17 +4,17 @@ plugins {
 }
 
 android {
-    namespace = "com.TJPK.tapsiriz"
+    namespace = "com.TJPK.tapsiris"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.TJPK.tapciriz"
+        applicationId = "com.TJPK.tapcsiris"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "0.0.1-concept"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
