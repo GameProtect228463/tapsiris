@@ -21,9 +21,11 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,6 +41,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -53,22 +56,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.TJPK.tapsiris.data.local.UserProfile
 import com.TJPK.tapsiris.data.remote.ServerConfig
 import com.TJPK.tapsiris.presentation.components.ServerSettingsDialog
+import com.TJPK.tapsiris.utils.LanguageManager
 import kotlinx.coroutines.launch
 
 /**
  * =========================================================================================
  * СЛОЙ PRESENTATION / SETTINGS: Экран настроек приложения.
- *
- * Обязанности:
- * - Отображение профиля студента (ФИО, группа) и кнопка выхода из аккаунта.
- * - Переключатели уведомлений о парах.
- * - Настройка подключения к серверу 1С (URL базы, учетная запись, проверка связи).
- * - Сведения о приложении и секретная пасхалка (15 нажатий на версию включают видео).
  * =========================================================================================
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,6 +79,7 @@ fun SettingsScreen(
     onLogout: () -> Unit,
     onSaveServerConfig: (ServerConfig) -> Unit
 ) {
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -87,6 +87,7 @@ fun SettingsScreen(
     var notifyBeforeLessons by remember { mutableStateOf(true) }
     var autoSyncSchedule by remember { mutableStateOf(true) }
     var show1CDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
 
     // Счётчик кликов на версию приложения (Пасхалка)
     var versionClicksCount by remember { mutableIntStateOf(0) }
@@ -204,6 +205,25 @@ fun SettingsScreen(
                 }
             }
 
+            // Раздел: Интерфейс (Смена языка)
+            SettingsSectionTitle(title = "Интерфейс")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                )
+            ) {
+                Column {
+                    SettingsActionItem(
+                        icon = Icons.Default.Language,
+                        title = "Язык приложения",
+                        subtitle = "Русский / Қазақша / English",
+                        onClick = { showLanguageDialog = true }
+                    )
+                }
+            }
+
             // Раздел: Уведомления и синхронизация
             SettingsSectionTitle(title = "Параметры расписания")
             Card(
@@ -232,7 +252,7 @@ fun SettingsScreen(
                 }
             }
 
-            // Раздел: Подключение к серверу 1С (перенесено сюда)
+            // Раздел: Подключение к серверу 1С
             SettingsSectionTitle(title = "Интеграция с 1С:Колледж")
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -251,7 +271,7 @@ fun SettingsScreen(
                 }
             }
 
-            // Раздел: О приложении (Пасхалка с 15 нажатиями на версию)
+            // Раздел: О приложении
             SettingsSectionTitle(title = "О приложении")
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -269,7 +289,6 @@ fun SettingsScreen(
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                    // Элемент: Версия приложения (Кликабельный для пасхалки!)
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -291,7 +310,7 @@ fun SettingsScreen(
                                     fontWeight = FontWeight.Medium
                                 )
                                 Text(
-                                    text = "v1.0 (Сборка 2026.10-release)",
+                                    text = "v0.0.1-concept (Сборка 2026.10)",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -303,6 +322,26 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    // Диалог выбора языка
+    if (showLanguageDialog) {
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = { Text(text = "Выберите язык / Тілді таңдаңыз") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LanguageOption(title = "Қазақша", code = "kk", context = context, onSelected = { showLanguageDialog = false })
+                    LanguageOption(title = "Русский", code = "ru", context = context, onSelected = { showLanguageDialog = false })
+                    LanguageOption(title = "English", code = "en", context = context, onSelected = { showLanguageDialog = false })
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLanguageDialog = false }) {
+                    Text("Отмена")
+                }
+            }
+        )
     }
 
     // Диалог настройки 1С
@@ -323,6 +362,26 @@ fun SettingsScreen(
     if (showEasterEggVideo) {
         EasterEggVideoDialog(
             onDismiss = { showEasterEggVideo = false }
+        )
+    }
+}
+
+@Composable
+private fun LanguageOption(title: String, code: String, context: android.content.Context, onSelected: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                onSelected()
+                LanguageManager.setLanguage(context, code)
+            },
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(12.dp)
         )
     }
 }

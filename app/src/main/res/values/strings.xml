@@ -1,3 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tapsiris concept</string>
+    <string name="settings_language">Язык интерфейса</string>
+    <string name="language_ru">Русский</string>
+    <string name="language_kk">Қазақша</string>
+    <string name="language_us">English</string>
 </resources>
