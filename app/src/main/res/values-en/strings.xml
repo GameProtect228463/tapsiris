@@ -1,25 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
+    <!-- App -->
     <string name="app_name">Tapsiris concept</string>
+    <string name="app_title_full">Tapsyrys — College Schedule</string>
+    <string name="app_system_subtitle">Information system for students</string>
+    <string name="app_version">App Version</string>
+    <string name="app_version_number">v0.0.1-concept (Build 2026.11)</string>
+
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">Got it</string>
+    <string name="loading">Loading…</string>
+    <string name="retry">Retry</string>
+    <string name="search">Search</string>
+    <string name="clear">Clear</string>
+
+    <!-- Language -->
     <string name="settings_language">Interface language</string>
     <string name="language_ru">Русский</string>
     <string name="language_kk">Қазақша</string>
     <string name="language_us">English</string>
-    <string name="settings_name">Settings</string>
-    <string name="back">Back</string>
-    <string name="auto_sync_subtitle">Check 1C updates on startup</string>
-    <string name="integration_1c">1C:College Integration</string>
-    <string name="server_params_1c">1C Server Settings</string>
-    <string name="address_not_configured">Address not configured</string>
-    <string name="about_app">About App</string>
-    <string name="app_title_full">Tapsyrys — College Schedule</string>
-    <string name="app_system_subtitle">Information system for students</string>
-    <string name="app_version">App Version</string>
-    <string name="app_version_number">v0.0.1-concept (Build 2026.10)</string>
     <string name="select_language_title">Select Language / Тілді таңдаңыз</string>
-    <string name="cancel">Cancel</string>
-    <string name="server_settings_saved">1C server settings saved</string>
+
+    <!-- Settings -->
+    <string name="settings_name">Settings</string>
     <string name="student_profile">Student Profile</string>
     <string name="group">Group</string>
     <string name="guest_access">Guest access</string>
@@ -31,12 +37,17 @@
     <string name="remind_about_couples">Remind about classes</string>
     <string name="notification_couples">Notification 15 minutes before class</string>
     <string name="auto_sync">Auto-sync</string>
-    <string name="err_enter_login">Enter login or student ID</string>
-    <string name="err_enter_password">Enter password</string>
-    <string name="err_enter_full_name">Enter your full name</string>
-    <string name="err_create_login">Create a login or enter student ID</string>
-    <string name="err_password_short">Password must be at least 4 characters</string>
-    <string name="student_prefix">Student</string>
+    <string name="auto_sync_subtitle">Check 1C updates on startup</string>
+    <string name="about_app">About App</string>
+    <string name="server_settings_saved">1C server settings saved</string>
+
+    <!-- 1C Integration -->
+    <string name="integration_1c">1C:College Integration</string>
+    <string name="server_params_1c">1C Server Settings</string>
+    <string name="address_not_configured">Address not configured</string>
+    <string name="sync_info_1c">Schedule data is synced with the college 1C server</string>
+
+    <!-- Auth -->
     <string name="tab_login">Sign In</string>
     <string name="tab_register">Register</string>
     <string name="label_full_name">Student Full Name</string>
@@ -49,5 +60,64 @@
     <string name="btn_sign_in">Sign In</string>
     <string name="btn_register">Register</string>
     <string name="btn_continue_guest">Continue as guest</string>
-    <string name="sync_info_1c">Schedule data is synced with the college 1C server</string>
+    <string name="student_prefix">Student</string>
+    <string name="err_enter_login">Enter login or student ID</string>
+    <string name="err_enter_password">Enter password</string>
+    <string name="err_enter_full_name">Enter your full name</string>
+    <string name="err_create_login">Create a login or enter student ID</string>
+    <string name="err_password_short">Password must be at least 4 characters</string>
+
+    <!-- Schedule screen -->
+    <string name="select_group">Select group</string>
+    <string name="search_schedule">Search subject, room, teacher…</string>
+    <string name="search_schedule_empty">Nothing found</string>
+    <string name="search_schedule_empty_hint">Try changing your search query</string>
+    <string name="no_lessons_today">No classes today!</string>
+    <string name="no_lessons_today_hint">A great day for rest or self-study 🎉</string>
+    <string name="week_odd">Numerator</string>
+    <string name="week_even">Denominator</string>
+    <string name="status_1c_online">1C online • %1$s</string>
+    <string name="status_1c_offline">1C: %1$s</string>
+    <string name="today">Today</string>
+    <string name="no_lessons_count">No classes</string>
+    <string name="lessons_count">%1$d classes • 08:30 — %2$s</string>
+    <string name="synced_at">Today at %1$s</string>
+    <string name="status_offline">Offline (1C unavailable)</string>
+    <string name="synced_success">Schedule synced with 1C</string>
+    <string name="sync_error">1C: %1$s (showing offline cache)</string>
+
+    <!-- Schedule loading states -->
+    <string name="loading_groups">Fetching group list…</string>
+    <string name="loading_schedule">Loading schedule…</string>
+    <string name="error_no_server">1C server address is not configured</string>
+    <string name="error_no_server_hint">Open settings and enter the 1C server URL</string>
+    <string name="error_connection">Could not connect to 1C server</string>
+    <string name="error_connection_hint">Check the server address and network, then tap Retry</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="demo_mode_banner">Demo mode: data is not connected to a real 1C server</string>
+
+    <!-- Group select -->
+    <string name="select_your_group">Select your group</string>
+    <string name="search_group">Search group or major…</string>
+    <string name="course_label">%1$s • Year %2$d</string>
+
+    <!-- Bells -->
+    <string name="bell_schedule_title">Bell Schedule</string>
+    <string name="bell_lesson_duration">Class duration — 1 hour 30 minutes</string>
+    <string name="bell_break">break %1$d min</string>
+
+    <!-- Lesson types -->
+    <string name="lesson_type_lecture">Lecture</string>
+    <string name="lesson_type_practice">Practice</string>
+    <string name="lesson_type_lab">Lab work</string>
+    <string name="lesson_type_exam">Test / Exam</string>
+    <string name="lesson_current">In progress</string>
+    <string name="lesson_replacement_label">Replacement / Change:</string>
+
+    <!-- Sync actions -->
+    <string name="action_refresh">Sync with 1C</string>
+    <string name="action_search">Search schedule</string>
+    <string name="action_bells">Bell schedule</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_select_group">Select group</string>
 </resources>

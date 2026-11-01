@@ -35,6 +35,7 @@ import com.TJPK.tapsiris.presentation.schedule.ScheduleViewModel
 import com.TJPK.tapsiris.presentation.settings.SettingsScreen
 import com.TJPK.tapsiris.ui.theme.TapsirizTheme
 import com.TJPK.tapsiris.utils.LanguageManager
+import com.TJPK.tapsiris.R
 
 /**
  * Экраны навигации приложения
@@ -60,7 +61,7 @@ class MainActivity : AppCompatActivity() {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val settingsManager = OneCSettingsManager(applicationContext)
                 val repository = ScheduleRepositoryImpl(settingsManager)
-                return ScheduleViewModel(repository, settingsManager) as T
+                return ScheduleViewModel(repository, settingsManager, applicationContext) as T
             }
         }
     }
@@ -188,3 +189,6 @@ fun ScheduleScreenDarkPreview() {
         )
     }
 }
+
+
+//  салам

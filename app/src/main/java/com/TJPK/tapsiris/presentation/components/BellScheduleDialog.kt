@@ -25,19 +25,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.TJPK.tapsiris.R
 import com.TJPK.tapsiris.domain.model.BellTime
 
 /**
- * =========================================================================================
- * СЛОЙ PRESENTATION / COMPONENT: Диалог расписания звонков.
- *
- * Обязанности:
- * - Отображение времени начала и окончания каждой пары.
- * - Подсветка длительности перемен (с акцентом на обеденный перерыв).
- * =========================================================================================
+ * Диалог расписания звонков.
  */
 @Composable
 fun BellScheduleDialog(
@@ -56,7 +52,7 @@ fun BellScheduleDialog(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "Расписание звонков",
+                    text = stringResource(R.string.bell_schedule_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -68,7 +64,7 @@ fun BellScheduleDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Длительность пары — 1 час 30 минут",
+                    text = stringResource(R.string.bell_lesson_duration),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -112,11 +108,12 @@ fun BellScheduleDialog(
                             }
 
                             Text(
-                                text = "перерыв ${bell.breakMinutes} мин",
+                                text = stringResource(R.string.bell_break, bell.breakMinutes),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (bell.breakMinutes >= 30) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = if (bell.breakMinutes >= 30) FontWeight.Bold else FontWeight.Normal,
+                                fontWeight = if (bell.breakMinutes >= 30) FontWeight.Bold
+                                else FontWeight.Normal,
                                 fontSize = 12.sp
                             )
                         }
@@ -126,7 +123,7 @@ fun BellScheduleDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Понятно", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.ok), fontWeight = FontWeight.Bold)
             }
         },
         shape = RoundedCornerShape(24.dp)

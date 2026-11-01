@@ -34,20 +34,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.TJPK.tapsiris.R
 import com.TJPK.tapsiris.domain.model.StudentGroup
 
 /**
- * =========================================================================================
- * СЛОЙ PRESENTATION / COMPONENT: Нижняя шторка (ModalBottomSheet) выбора учебной группы.
- *
- * Обязанности:
- * - Отображение полного списка групп, загруженного из базы 1С.
- * - Полнотекстовый поиск по шифру группы или названию специальности.
- * - Выделение текущей выбранной группы галочкой.
- * =========================================================================================
+ * Нижняя шторка выбора учебной группы.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,7 +86,7 @@ fun GroupSelectSheet(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "Выберите вашу группу",
+                    text = stringResource(R.string.select_your_group),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -103,14 +98,20 @@ fun GroupSelectSheet(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Поиск группы или специальности...") },
+                placeholder = { Text(stringResource(R.string.search_group)) },
                 leadingIcon = {
-                    Icon(imageVector = Icons.Default.Search, contentDescription = "Поиск")
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = stringResource(R.string.search)
+                    )
                 },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(imageVector = Icons.Default.Clear, contentDescription = "Очистить")
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = stringResource(R.string.clear)
+                            )
                         }
                     }
                 },
@@ -153,9 +154,14 @@ fun GroupSelectSheet(
                                     else MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "${group.department} • ${group.course} курс",
+                                    text = stringResource(
+                                        R.string.course_label,
+                                        group.department,
+                                        group.course
+                                    ),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                    color = if (isSelected)
+                                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                                     else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 12.sp
                                 )
@@ -164,7 +170,7 @@ fun GroupSelectSheet(
                             if (isSelected) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
-                                    contentDescription = "Выбрано",
+                                    contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }

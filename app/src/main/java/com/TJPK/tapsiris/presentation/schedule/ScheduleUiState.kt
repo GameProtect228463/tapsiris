@@ -3,55 +3,57 @@ package com.TJPK.tapsiris.presentation.schedule
 import com.TJPK.tapsiris.data.remote.ServerConfig
 import com.TJPK.tapsiris.domain.model.BellTime
 import com.TJPK.tapsiris.domain.model.DaySchedule
+import com.TJPK.tapsiris.domain.model.Lesson
 import com.TJPK.tapsiris.domain.model.StudentGroup
 import com.TJPK.tapsiris.domain.model.WeekType
 
 /**
+ * Состояния загрузки данных с 1С-сервера.
+ */
+sealed interface ScheduleLoadState {
+    /** Данные загружаются — показываем прогресс-индикатор */
+    data class Loading(val message: String = "") : ScheduleLoadState
+
+    /** Ошибка получения данных — показываем экран ошибки */
+    data class Error(
+        val title: String,
+        val hint: String,
+        val showSettingsButton: Boolean = false
+    ) : ScheduleLoadState
+
+    /** Данные успешно получены (онлайн или из кэша) */
+    object Success : ScheduleLoadState
+}
+
+/**
  * =========================================================================================
  * СЛОЙ PRESENTATION: Состояние экрана расписания (UI State).
- * Единственный неизменяемый (immutable) источник правды для отрисовки Compose UI.
  * =========================================================================================
- *
- * @property groups Доступные для выбора группы студентов
- * @property selectedGroup Выбранная в данный момент группа
- * @property weekType Текущая учебная неделя: Числитель (ODD) или Знаменатель (EVEN)
- * @property selectedDayIndex Индекс выбранного дня недели (0..5 для Пн..Сб)
- * @property weekSchedule Расписание на всю текущую неделю
- * @property bells Расписание звонков и перемен колледжа
- * @property serverConfig Настройки подключения к серверу 1С
- * @property isRefreshing Идет ли процесс сетевой синхронизации
- * @property is1CConnected Доступен ли сервер 1С (true = онлайн, false = оффлайн/кэш)
- * @property lastUpdatedText Текстовый статус времени последнего обновления
- * @property isSearchActive Открыта ли строка поиска
- * @property searchQuery Текущий поисковый запрос (по предмету, аудитории или преподавателю)
- * @property userMessage Всплывающее информационное сообщение для Snackbar
  */
 data class ScheduleUiState(
     val groups: List<StudentGroup> = emptyList(),
     val selectedGroup: StudentGroup? = null,
     val weekType: WeekType = WeekType.ODD,
-    val selectedDayIndex: Int = 2, // По умолчанию Среда (2)
+    val selectedDayIndex: Int = 2,
     val weekSchedule: List<DaySchedule> = emptyList(),
     val bells: List<BellTime> = emptyList(),
     val serverConfig: ServerConfig = ServerConfig(),
     val isRefreshing: Boolean = false,
     val is1CConnected: Boolean = false,
-    val lastUpdatedText: String = "Загрузка...",
+    val isDemoMode: Boolean = false,
+    val lastUpdatedText: String = "",
+    val loadState: ScheduleLoadState = ScheduleLoadState.Loading(),
     val isSearchActive: Boolean = false,
     val searchQuery: String = "",
     val userMessage: String? = null
 ) {
-    /** Выбранный день недели или null */
     val currentDay: DaySchedule?
         get() = weekSchedule.getOrNull(selectedDayIndex) ?: weekSchedule.firstOrNull()
 
-    /** Отфильтрованный список уроков выбранного дня с учетом поискового запроса */
-    val displayLessons: List<com.TJPK.tapsiris.domain.model.Lesson>
+    val displayLessons: List<Lesson>
         get() {
             val lessons = currentDay?.lessons ?: emptyList()
-            if (!isSearchActive || searchQuery.isBlank()) {
-                return lessons
-            }
+            if (!isSearchActive || searchQuery.isBlank()) return lessons
             return lessons.filter {
                 it.subject.contains(searchQuery, ignoreCase = true) ||
                         it.teacher.contains(searchQuery, ignoreCase = true) ||
@@ -61,7 +63,7 @@ data class ScheduleUiState(
 }
 
 /**
- * Действия пользователя на экране (UI Events / Intents в паттерне MVI).
+ * Действия пользователя на экране (MVI Events).
  */
 sealed interface ScheduleUiEvent {
     data class SelectGroup(val group: StudentGroup) : ScheduleUiEvent

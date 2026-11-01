@@ -1,7 +1,9 @@
 package com.TJPK.tapsiris.presentation.schedule
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.TJPK.tapsiris.R
 import com.TJPK.tapsiris.data.local.OneCSettingsManager
 import com.TJPK.tapsiris.domain.repository.ScheduleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,16 +18,12 @@ import java.util.Locale
 /**
  * =========================================================================================
  * СЛОЙ PRESENTATION: ViewModel управления экраном расписания.
- *
- * Отвечает за:
- * 1. Хранение и изменение состояния [ScheduleUiState] при конфигурационных изменениях (поворот экрана).
- * 2. Вызов методов репозитория [ScheduleRepository] для получения групп, расписания и звонков.
- * 3. Обработку событий пользователя [ScheduleUiEvent] (UDF - Unidirectional Data Flow).
  * =========================================================================================
  */
 class ScheduleViewModel(
     private val repository: ScheduleRepository,
-    private val settingsManager: OneCSettingsManager
+    private val settingsManager: OneCSettingsManager,
+    private val appContext: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -37,9 +35,6 @@ class ScheduleViewModel(
         loadInitialData()
     }
 
-    /**
-     * Точка входа для всех пользовательских действий на экране.
-     */
     fun onEvent(event: ScheduleUiEvent) {
         when (event) {
             is ScheduleUiEvent.SelectGroup -> {
@@ -72,7 +67,7 @@ class ScheduleViewModel(
                 _uiState.update {
                     it.copy(
                         serverConfig = event.newConfig,
-                        userMessage = "Настройки сервера 1С сохранены"
+                        userMessage = appContext.getString(R.string.server_settings_saved)
                     )
                 }
                 loadSchedule()
@@ -85,7 +80,13 @@ class ScheduleViewModel(
 
     private fun loadInitialData() {
         viewModelScope.launch {
-            // 1. Загрузка групп
+            // Шаг 1: Загрузка групп
+            _uiState.update {
+                it.copy(loadState = ScheduleLoadState.Loading(
+                    appContext.getString(R.string.loading_groups)
+                ))
+            }
+
             val groupsResult = repository.getGroups()
             if (groupsResult.isSuccess) {
                 val groups = groupsResult.getOrNull().orEmpty()
@@ -97,28 +98,52 @@ class ScheduleViewModel(
                 }
             }
 
-            // 2. Загрузка звонков
+            // Шаг 2: Загрузка звонков
             val bellsResult = repository.getBells()
             if (bellsResult.isSuccess) {
                 _uiState.update { it.copy(bells = bellsResult.getOrNull().orEmpty()) }
             }
 
-            // 3. Загрузка расписания
+            // Шаг 3: Загрузка расписания
             loadSchedule()
         }
     }
 
     fun loadSchedule() {
+        val config = _uiState.value.serverConfig
         val currentSelectedGroup = _uiState.value.selectedGroup
         val currentWeekType = _uiState.value.weekType
 
         if (_uiState.value.isRefreshing) return
 
-        _uiState.update { it.copy(isRefreshing = true) }
+        // Если адрес сервера не настроен и демо-режим отключён — показываем ошибку сразу
+        if (config.serverUrl.isBlank() && !config.isDemoMode) {
+            _uiState.update {
+                it.copy(
+                    isRefreshing = false,
+                    loadState = ScheduleLoadState.Error(
+                        title = appContext.getString(R.string.error_no_server),
+                        hint = appContext.getString(R.string.error_no_server_hint),
+                        showSettingsButton = true
+                    )
+                )
+            }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                isRefreshing = true,
+                loadState = ScheduleLoadState.Loading(
+                    appContext.getString(R.string.loading_schedule)
+                )
+            )
+        }
 
         viewModelScope.launch {
             val groupId = currentSelectedGroup?.id ?: ""
             val scheduleResult = repository.getSchedule(groupId, currentWeekType)
+            val isDemoMode = settingsManager.getConfig().isDemoMode
 
             _uiState.update { state ->
                 val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -129,17 +154,28 @@ class ScheduleViewModel(
                     state.copy(
                         weekSchedule = days,
                         isRefreshing = false,
-                        is1CConnected = true,
-                        lastUpdatedText = "Сегодня в $nowTime",
-                        userMessage = "Расписание синхронизировано с 1С"
+                        isDemoMode = isDemoMode,
+                        is1CConnected = !isDemoMode,
+                        lastUpdatedText = if (isDemoMode) "Demo"
+                        else appContext.getString(R.string.synced_at, nowTime),
+                        loadState = ScheduleLoadState.Success,
+                        userMessage = if (!isDemoMode)
+                            appContext.getString(R.string.synced_success) else null
                     )
                 } else {
-                    val errorMsg = scheduleResult.exceptionOrNull()?.localizedMessage ?: "Сбой соединения с 1С"
+                    val errorMsg = scheduleResult.exceptionOrNull()?.localizedMessage
+                        ?: appContext.getString(R.string.error_connection)
                     state.copy(
                         isRefreshing = false,
+                        isDemoMode = false,
                         is1CConnected = false,
-                        lastUpdatedText = "Офлайн (1С недоступен)",
-                        userMessage = "1C: $errorMsg (показан офлайн кэш)"
+                        lastUpdatedText = appContext.getString(R.string.status_offline),
+                        loadState = ScheduleLoadState.Error(
+                            title = appContext.getString(R.string.error_connection),
+                            hint = appContext.getString(R.string.error_connection_hint),
+                            showSettingsButton = false
+                        ),
+                        userMessage = appContext.getString(R.string.sync_error, errorMsg)
                     )
                 }
             }

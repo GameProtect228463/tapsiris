@@ -420,6 +420,7 @@ fun AuthScreen(
     // Диалог выбора языка
     if (showLanguageDialog) {
         LanguageSelectDialog(
+            currentCode = LanguageManager.getCurrentLanguageCode(context),
             onDismiss = { showLanguageDialog = false },
             onLanguageSelected = { langCode ->
                 LanguageManager.setLanguage(context, langCode)

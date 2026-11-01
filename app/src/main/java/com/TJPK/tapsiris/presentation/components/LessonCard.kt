@@ -31,24 +31,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.TJPK.tapsiris.R
 import com.TJPK.tapsiris.domain.model.Lesson
 import com.TJPK.tapsiris.domain.model.LessonType
 
 /**
- * =========================================================================================
- * СЛОЙ PRESENTATION / COMPONENT: Карточка одного учебного занятия (пары).
- *
- * Обязанности:
- * - Отображение номера пары и времени проведения (с иконкой часов).
- * - Подсветка статуса "Идёт сейчас" с акцентной рамкой.
- * - Цветовой бейдж вида занятия (Лекция / Практика / Лабораторная / Экзамен).
- * - Отображение названия дисциплины и ФИО преподавателя.
- * - Выделенный блок замен/переносов (критично для студентов при изменениях из 1С).
- * =========================================================================================
+ * Карточка одного учебного занятия (пары).
  */
 @Composable
 fun LessonCard(
@@ -59,11 +52,20 @@ fun LessonCard(
     val hasReplacement = lesson.replacementInfo != null
 
     val (badgeBgColor, badgeTextColor) = when (lesson.type) {
-        LessonType.LECTURE -> Color(0xFFE8DEF8) to Color(0xFF4A4458)
+        LessonType.LECTURE  -> Color(0xFFE8DEF8) to Color(0xFF4A4458)
         LessonType.PRACTICE -> Color(0xFFC8E6C9) to Color(0xFF1B5E20)
-        LessonType.LAB -> Color(0xFFFFECB3) to Color(0xFFE65100)
-        LessonType.EXAM -> Color(0xFFFFCDD2) to Color(0xFFB71C1C)
+        LessonType.LAB      -> Color(0xFFFFECB3) to Color(0xFFE65100)
+        LessonType.EXAM     -> Color(0xFFFFCDD2) to Color(0xFFB71C1C)
     }
+
+    val lessonTypeLabel = stringResource(
+        when (lesson.type) {
+            LessonType.LECTURE  -> R.string.lesson_type_lecture
+            LessonType.PRACTICE -> R.string.lesson_type_practice
+            LessonType.LAB      -> R.string.lesson_type_lab
+            LessonType.EXAM     -> R.string.lesson_type_exam
+        }
+    )
 
     Card(
         modifier = modifier
@@ -71,18 +73,15 @@ fun LessonCard(
             .animateContentSize(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isCurrent) {
+            containerColor = if (isCurrent)
                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-            } else {
+            else
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            }
         ),
-        border = if (isCurrent) {
-            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-        } else if (hasReplacement) {
-            BorderStroke(1.dp, Color(0xFFFFA000).copy(alpha = 0.6f))
-        } else {
-            BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+        border = when {
+            isCurrent      -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+            hasReplacement -> BorderStroke(1.dp, Color(0xFFFFA000).copy(alpha = 0.6f))
+            else           -> BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
         }
     ) {
         Column(
@@ -90,14 +89,14 @@ fun LessonCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Верхняя строка: Номер пары, время, бейдж текущей пары и тип занятия
+            // Верхняя строка: номер, время, бейдж «Идёт сейчас», тип
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Номер пары
+                    // Кружок с номером пары
                     Box(
                         modifier = Modifier
                             .size(28.dp)
@@ -119,7 +118,7 @@ fun LessonCard(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // Время пары
+                    // Время
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Schedule,
@@ -136,6 +135,7 @@ fun LessonCard(
                         )
                     }
 
+                    // Бейдж «Идёт сейчас»
                     if (isCurrent) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Surface(
@@ -143,7 +143,7 @@ fun LessonCard(
                             color = MaterialTheme.colorScheme.primary
                         ) {
                             Text(
-                                text = "Идёт сейчас",
+                                text = stringResource(R.string.lesson_current),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
@@ -154,12 +154,9 @@ fun LessonCard(
                 }
 
                 // Тип пары
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = badgeBgColor
-                ) {
+                Surface(shape = RoundedCornerShape(8.dp), color = badgeBgColor) {
                     Text(
-                        text = lesson.type.title,
+                        text = lessonTypeLabel,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
@@ -180,7 +177,7 @@ fun LessonCard(
                 overflow = TextOverflow.Ellipsis
             )
 
-            // Блок уведомления о замене/изменении
+            // Блок замены / изменения
             if (lesson.replacementInfo != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Surface(
@@ -203,7 +200,7 @@ fun LessonCard(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Замена / Изменение:",
+                                text = stringResource(R.string.lesson_replacement_label),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFBF360C)
@@ -221,7 +218,7 @@ fun LessonCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Преподаватель и Аудитория
+            // Преподаватель и аудитория
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

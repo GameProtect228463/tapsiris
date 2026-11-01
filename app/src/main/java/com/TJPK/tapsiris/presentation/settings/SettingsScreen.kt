@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -66,6 +65,7 @@ import com.TJPK.tapsiris.presentation.components.ServerSettingsDialog
 import com.TJPK.tapsiris.utils.LanguageManager
 import com.TJPK.tapsiris.R
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.derivedStateOf
 
 /**
  * =========================================================================================
@@ -91,6 +91,17 @@ fun SettingsScreen(
     var autoSyncSchedule by remember { mutableStateOf(true) }
     var show1CDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var currentLangCode by remember { mutableStateOf(LanguageManager.getCurrentLanguageCode(context)) }
+
+    val currentLangLabel by remember {
+        derivedStateOf {
+            when (currentLangCode) {
+                "kk" -> "Қазақша"
+                "en" -> "English"
+                else -> "Русский"
+            }
+        }
+    }
 
     // Счётчик кликов на версию приложения (Пасхалка)
     var versionClicksCount by remember { mutableIntStateOf(0) }
@@ -222,7 +233,7 @@ fun SettingsScreen(
                     SettingsActionItem(
                         icon = Icons.Default.Language,
                         title = stringResource(R.string.app_language),
-                        subtitle = "Русский / Қазақша / English",
+                        subtitle = currentLangLabel,
                         onClick = { showLanguageDialog = true }
                     )
                 }
@@ -330,20 +341,12 @@ fun SettingsScreen(
 
     // Диалог выбора языка
     if (showLanguageDialog) {
-        AlertDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            title = { Text(text = stringResource(R.string.select_language_title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LanguageOption(title = "Қазақша", code = "kk", context = context, onSelected = { showLanguageDialog = false })
-                    LanguageOption(title = "Русский", code = "ru", context = context, onSelected = { showLanguageDialog = false })
-                    LanguageOption(title = "English", code = "en", context = context, onSelected = { showLanguageDialog = false })
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showLanguageDialog = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
+        LanguageSelectDialog(
+            currentCode = currentLangCode,
+            onDismiss = { showLanguageDialog = false },
+            onLanguageSelected = { code ->
+                currentLangCode = code
+                LanguageManager.setLanguage(context, code)
             }
         )
     }
@@ -366,26 +369,6 @@ fun SettingsScreen(
     if (showEasterEggVideo) {
         EasterEggVideoDialog(
             onDismiss = { showEasterEggVideo = false }
-        )
-    }
-}
-
-@Composable
-private fun LanguageOption(title: String, code: String, context: android.content.Context, onSelected: () -> Unit) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                onSelected()
-                LanguageManager.setLanguage(context, code)
-            },
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(12.dp)
         )
     }
 }

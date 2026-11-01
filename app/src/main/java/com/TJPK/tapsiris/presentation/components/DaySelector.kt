@@ -27,21 +27,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.TJPK.tapsiris.R
 import com.TJPK.tapsiris.domain.model.DaySchedule
 
 /**
- * =========================================================================================
- * СЛОЙ PRESENTATION / COMPONENT: Горизонтальный селектор дней недели.
- *
- * Обязанности:
- * - Отображение дней учебной недели (Пн, Вт, Ср, Чт, Пт, Сб).
- * - Выделение текущего выбранного дня (плавная анимация смены цветов).
- * - Индикатор наличия замен (оранжевая точка) или обычных пар.
- * - Маркер "Сегодня" под актуальным календарным днем.
- * =========================================================================================
+ * Горизонтальный селектор дней недели.
  */
 @Composable
 fun DaySelector(
@@ -101,7 +95,7 @@ fun DaySelector(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    // Индикаторы: замена (оранжевая точка) или точка пары
+                    // Индикатор замены или пары
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(3.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -112,7 +106,9 @@ fun DaySelector(
                                 modifier = Modifier
                                     .size(6.dp)
                                     .clip(CircleShape)
-                                    .background(if (isSelected) Color(0xFFFFD54F) else Color(0xFFFF9800))
+                                    .background(
+                                        if (isSelected) Color(0xFFFFD54F) else Color(0xFFFF9800)
+                                    )
                             )
                         } else if (day.lessons.isNotEmpty()) {
                             Box(
@@ -129,7 +125,7 @@ fun DaySelector(
                     if (day.isToday) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Сегодня",
+                            text = stringResource(R.string.today),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isSelected) MaterialTheme.colorScheme.onPrimary

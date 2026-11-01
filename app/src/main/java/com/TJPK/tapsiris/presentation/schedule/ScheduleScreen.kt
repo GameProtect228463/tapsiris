@@ -1,11 +1,15 @@
 package com.TJPK.tapsiris.presentation.schedule
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,14 +38,18 @@ import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Today
+import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -63,10 +71,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.TJPK.tapsiris.R
 import com.TJPK.tapsiris.domain.model.WeekType
 import com.TJPK.tapsiris.presentation.components.BellScheduleDialog
 import com.TJPK.tapsiris.presentation.components.DaySelector
@@ -76,9 +86,6 @@ import com.TJPK.tapsiris.presentation.components.LessonCard
 /**
  * =========================================================================================
  * СЛОЙ PRESENTATION / SCREEN: Главный экран расписания.
- *
- * Принимает [ScheduleViewModel] и подписывается на его [ScheduleUiState].
- * Все действия пользователя передаются через метод [ScheduleViewModel.onEvent].
  * =========================================================================================
  */
 @Composable
@@ -89,7 +96,6 @@ fun ScheduleScreen(
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Показ всплывающих уведомлений из ViewModel
     LaunchedEffect(state.userMessage) {
         state.userMessage?.let { msg ->
             snackbarHostState.showSnackbar(msg)
@@ -105,10 +111,6 @@ fun ScheduleScreen(
     )
 }
 
-/**
- * Презентационный компонент экрана (Stateless composable).
- * Удобен для изолированного тестирования и Compose Preview.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleScreenContent(
@@ -126,9 +128,7 @@ fun ScheduleScreenContent(
     val rotationAngle by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 800, easing = LinearEasing)
-        ),
+        animationSpec = infiniteRepeatable(animation = tween(800, easing = LinearEasing)),
         label = "angle"
     )
 
@@ -155,49 +155,49 @@ fun ScheduleScreenContent(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = state.selectedGroup?.name ?: "Выберите группу",
+                                text = state.selectedGroup?.name
+                                    ?: stringResource(R.string.select_group),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Выбрать группу",
+                                contentDescription = stringResource(R.string.action_select_group),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onEvent(ScheduleUiEvent.ToggleSearch(!state.isSearchActive)) }) {
+                    IconButton(onClick = {
+                        onEvent(ScheduleUiEvent.ToggleSearch(!state.isSearchActive))
+                    }) {
                         Icon(
-                            imageVector = if (state.isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                            contentDescription = "Поиск по расписанию"
+                            imageVector = if (state.isSearchActive) Icons.Default.Close
+                            else Icons.Default.Search,
+                            contentDescription = stringResource(R.string.action_search)
                         )
                     }
-
                     IconButton(onClick = { showBellsDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Notifications,
-                            contentDescription = "Расписание звонков"
+                            contentDescription = stringResource(R.string.action_bells)
                         )
                     }
-
-                    // Кнопка настроек приложения
                     IconButton(onClick = onOpenSettings) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Настройки"
+                            contentDescription = stringResource(R.string.action_settings)
                         )
                     }
-
                     IconButton(
                         onClick = { onEvent(ScheduleUiEvent.Refresh) },
                         enabled = !state.isRefreshing
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Синхронизация с 1С",
+                            contentDescription = stringResource(R.string.action_refresh),
                             modifier = Modifier.rotate(if (state.isRefreshing) rotationAngle else 0f),
                             tint = if (state.isRefreshing) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurface
@@ -215,11 +215,12 @@ fun ScheduleScreenContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            // Строка поиска
             AnimatedVisibility(visible = state.isSearchActive) {
                 OutlinedTextField(
                     value = state.searchQuery,
                     onValueChange = { onEvent(ScheduleUiEvent.SearchQueryChanged(it)) },
-                    placeholder = { Text("Поиск предмета, кабинета, учителя...") },
+                    placeholder = { Text(stringResource(R.string.search_schedule)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 6.dp),
@@ -230,7 +231,9 @@ fun ScheduleScreenContent(
                     },
                     trailingIcon = {
                         if (state.searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { onEvent(ScheduleUiEvent.SearchQueryChanged("")) }) {
+                            IconButton(onClick = {
+                                onEvent(ScheduleUiEvent.SearchQueryChanged(""))
+                            }) {
                                 Icon(imageVector = Icons.Default.Close, contentDescription = null)
                             }
                         }
@@ -238,7 +241,22 @@ fun ScheduleScreenContent(
                 )
             }
 
-            // Статус подключения и переключатель недели
+            // Демо-баннер
+            AnimatedVisibility(visible = state.isDemoMode) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.tertiaryContainer
+                ) {
+                    Text(
+                        text = stringResource(R.string.demo_mode_banner),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+            }
+
+            // Статус 1С + переключатель недели
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -254,12 +272,17 @@ fun ScheduleScreenContent(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(if (state.is1CConnected) Color(0xFF4CAF50) else Color(0xFFFFA000))
+                            .background(
+                                if (state.is1CConnected) Color(0xFF4CAF50)
+                                else Color(0xFFFFA000)
+                            )
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (state.is1CConnected) "1С онлайн • ${state.lastUpdatedText}"
-                        else "1С: ${state.lastUpdatedText}",
+                        text = if (state.is1CConnected)
+                            stringResource(R.string.status_1c_online, state.lastUpdatedText)
+                        else
+                            stringResource(R.string.status_1c_offline, state.lastUpdatedText),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp
@@ -270,7 +293,7 @@ fun ScheduleScreenContent(
                     FilterChip(
                         selected = state.weekType == WeekType.ODD,
                         onClick = { onEvent(ScheduleUiEvent.SelectWeekType(WeekType.ODD)) },
-                        label = { Text("Числитель", fontSize = 11.sp) },
+                        label = { Text(stringResource(R.string.week_odd), fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
                         ),
@@ -279,7 +302,7 @@ fun ScheduleScreenContent(
                     FilterChip(
                         selected = state.weekType == WeekType.EVEN,
                         onClick = { onEvent(ScheduleUiEvent.SelectWeekType(WeekType.EVEN)) },
-                        label = { Text("Знаменатель", fontSize = 11.sp) },
+                        label = { Text(stringResource(R.string.week_even), fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
                         ),
@@ -288,120 +311,91 @@ fun ScheduleScreenContent(
                 }
             }
 
-            // Селектор дней недели
-            DaySelector(
-                days = state.weekSchedule,
-                selectedDayIndex = state.selectedDayIndex,
-                onDaySelected = { onEvent(ScheduleUiEvent.SelectDay(it)) }
-            )
-
-            // Сводка выбранного дня
-            val currentDay = state.currentDay
-            if (currentDay != null) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "${currentDay.dayFullName}, ${currentDay.dateText}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = if (currentDay.lessons.isEmpty()) "Пар нет"
-                                else "${currentDay.lessons.size} пары • 08:30 — ${currentDay.lessons.last().timeEnd}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+            // Основной контент: загрузка / ошибка / данные
+            AnimatedContent(
+                targetState = state.loadState,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                label = "content_state"
+            ) { loadState ->
+                when (loadState) {
+                    // ── Загрузка ──────────────────────────────────────────────────
+                    is ScheduleLoadState.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(48.dp),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = loadState.message,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
+                    }
 
-                        val todayIndex = state.weekSchedule.indexOfFirst { it.isToday }
-                        if (todayIndex != -1 && state.selectedDayIndex != todayIndex) {
-                            Surface(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .clickable { onEvent(ScheduleUiEvent.SelectDay(todayIndex)) },
-                                color = MaterialTheme.colorScheme.primaryContainer
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
+                    // ── Ошибка подключения ────────────────────────────────────────
+                    is ScheduleLoadState.Error -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.WifiOff,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = loadState.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = loadState.hint,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(24.dp))
+                                if (loadState.showSettingsButton) {
+                                    Button(onClick = onOpenSettings) {
+                                        Text(stringResource(R.string.open_settings))
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                                OutlinedButton(onClick = { onEvent(ScheduleUiEvent.Refresh) }) {
                                     Icon(
-                                        imageVector = Icons.Default.Today,
+                                        imageVector = Icons.Default.Refresh,
                                         contentDescription = null,
-                                        modifier = Modifier.size(14.dp),
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                        modifier = Modifier.size(18.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "Сегодня",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(stringResource(R.string.retry))
                                 }
                             }
                         }
                     }
-                }
-            }
 
-            // Список занятий
-            val displayLessons = state.displayLessons
-            if (displayLessons.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.outline
+                    // ── Данные загружены ──────────────────────────────────────────
+                    is ScheduleLoadState.Success -> {
+                        ScheduleContentView(
+                            state = state,
+                            onEvent = onEvent,
+                            onOpenSettings = onOpenSettings
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = if (state.isSearchActive && state.searchQuery.isNotEmpty()) "Ничего не найдено"
-                            else "В этот день пар нет!",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = if (state.isSearchActive && state.searchQuery.isNotEmpty()) "Попробуйте изменить поисковый запрос"
-                            else "Отличный день для отдыха или самоподготовки 🎉",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(displayLessons, key = { it.id }) { lesson ->
-                        LessonCard(lesson = lesson)
                     }
                 }
             }
@@ -423,5 +417,145 @@ fun ScheduleScreenContent(
             bells = state.bells,
             onDismiss = { showBellsDialog = false }
         )
+    }
+}
+
+/** Контент экрана когда данные успешно загружены */
+@Composable
+private fun ScheduleContentView(
+    state: ScheduleUiState,
+    onEvent: (ScheduleUiEvent) -> Unit,
+    onOpenSettings: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Селектор дней
+        DaySelector(
+            days = state.weekSchedule,
+            selectedDayIndex = state.selectedDayIndex,
+            onDaySelected = { onEvent(ScheduleUiEvent.SelectDay(it)) }
+        )
+
+        // Сводка дня
+        val currentDay = state.currentDay
+        if (currentDay != null) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "${currentDay.dayFullName}, ${currentDay.dateText}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = if (currentDay.lessons.isEmpty())
+                                stringResource(R.string.no_lessons_count)
+                            else
+                                stringResource(
+                                    R.string.lessons_count,
+                                    currentDay.lessons.size,
+                                    currentDay.lessons.last().timeEnd
+                                ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    val todayIndex = state.weekSchedule.indexOfFirst { it.isToday }
+                    if (todayIndex != -1 && state.selectedDayIndex != todayIndex) {
+                        Surface(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable { onEvent(ScheduleUiEvent.SelectDay(todayIndex)) },
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Today,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = stringResource(R.string.today),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Список занятий или пустое состояние
+        val displayLessons = state.displayLessons
+        if (displayLessons.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.outline
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = if (state.isSearchActive && state.searchQuery.isNotEmpty())
+                            stringResource(R.string.search_schedule_empty)
+                        else
+                            stringResource(R.string.no_lessons_today),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (state.isSearchActive && state.searchQuery.isNotEmpty())
+                            stringResource(R.string.search_schedule_empty_hint)
+                        else
+                            stringResource(R.string.no_lessons_today_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(displayLessons, key = { it.id }) { lesson ->
+                    LessonCard(lesson = lesson)
+                }
+            }
+        }
     }
 }

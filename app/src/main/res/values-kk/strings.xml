@@ -1,25 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
+    <!-- App -->
     <string name="app_name">Tapsiris concept</string>
+    <string name="app_title_full">Тапсырыс — Колледж кестесі</string>
+    <string name="app_system_subtitle">Студенттерге арналған ақпараттық жүйе</string>
+    <string name="app_version">Қолданба нұсқасы</string>
+    <string name="app_version_number">v0.0.1-concept (Құрастыру 2026.11)</string>
+
+    <!-- Common -->
+    <string name="back">Артқа</string>
+    <string name="cancel">Болдырмау</string>
+    <string name="ok">Түсінікті</string>
+    <string name="loading">Жүктелуде…</string>
+    <string name="retry">Қайталау</string>
+    <string name="search">Іздеу</string>
+    <string name="clear">Тазалау</string>
+
+    <!-- Language -->
     <string name="settings_language">Интерфейс тілі</string>
     <string name="language_ru">Русский</string>
     <string name="language_kk">Қазақша</string>
     <string name="language_us">English</string>
-    <string name="settings_name">Настройки</string>
-    <string name="back">Артқа</string>
-    <string name="auto_sync_subtitle">Іске қосу кезінде 1С өзгерістерін тексеру</string>
-    <string name="integration_1c">1С:Колледж интеграциясы</string>
-    <string name="server_params_1c">1С сервер параметрлері</string>
-    <string name="address_not_configured">Мекенжай бапталмаған</string>
-    <string name="about_app">Қолданба туралы</string>
-    <string name="app_title_full">Тапсырыс — Колледж кестесі</string>
-    <string name="app_system_subtitle">Студенттерге арналған ақпараттық жүйе</string>
-    <string name="app_version">Қолданба нұсқасы</string>
-    <string name="app_version_number">v0.0.1-concept (Құрастыру 2026.10)</string>
     <string name="select_language_title">Тілді таңдаңыз / Выберите язык</string>
-    <string name="cancel">Болдырмау</string>
-    <string name="server_settings_saved">1С сервер параметрлері сақталды</string>
+
+    <!-- Settings -->
+    <string name="settings_name">Параметрлер</string>
     <string name="student_profile">Студент профилі</string>
     <string name="group">Топ</string>
     <string name="guest_access">Қонақ қолжетімділігі</string>
@@ -31,12 +37,17 @@
     <string name="remind_about_couples">Сабақтар туралы еске салу</string>
     <string name="notification_couples">Сабақ басталуға 15 минут қалғанда хабарлама</string>
     <string name="auto_sync">Автосинхронизация</string>
-    <string name="err_enter_login">Логинді или студенттік билет нөмірін енгізіңіз</string>
-    <string name="err_enter_password">Кұпиясөзді енгізіңіз</string>
-    <string name="err_enter_full_name">Толық аты-жөніңізді енгізіңіз</string>
-    <string name="err_create_login">Логин ойлап табыңыз немесе студбилетті көрсетіңіз</string>
-    <string name="err_password_short">Құпиясөз кемінде 4 таңбадан тұруы керек</string>
-    <string name="student_prefix">Студент</string>
+    <string name="auto_sync_subtitle">Іске қосу кезінде 1С өзгерістерін тексеру</string>
+    <string name="about_app">Қолданба туралы</string>
+    <string name="server_settings_saved">1С сервер параметрлері сақталды</string>
+
+    <!-- 1C Integration -->
+    <string name="integration_1c">1С:Колледж интеграциясы</string>
+    <string name="server_params_1c">1С сервер параметрлері</string>
+    <string name="address_not_configured">Мекенжай бапталмаған</string>
+    <string name="sync_info_1c">Кесте деректері колледждің 1С серверімен синхрондалады</string>
+
+    <!-- Auth -->
     <string name="tab_login">Кіру</string>
     <string name="tab_register">Тіркелу</string>
     <string name="label_full_name">Студенттің АЖТ</string>
@@ -49,5 +60,64 @@
     <string name="btn_sign_in">Кіру</string>
     <string name="btn_register">Тіркелу</string>
     <string name="btn_continue_guest">Тіркелусіз жалғастыру</string>
-    <string name="sync_info_1c">Кесте деректері колледждің 1С серверімен синхрондалады</string>
+    <string name="student_prefix">Студент</string>
+    <string name="err_enter_login">Логинді немесе студенттік билет нөмірін енгізіңіз</string>
+    <string name="err_enter_password">Құпиясөзді енгізіңіз</string>
+    <string name="err_enter_full_name">Толық аты-жөніңізді енгізіңіз</string>
+    <string name="err_create_login">Логин ойлап табыңыз немесе студбилетті көрсетіңіз</string>
+    <string name="err_password_short">Құпиясөз кемінде 4 таңбадан тұруы керек</string>
+
+    <!-- Schedule screen -->
+    <string name="select_group">Топты таңдаңыз</string>
+    <string name="search_schedule">Пән, кабинет, мұғалімді іздеу…</string>
+    <string name="search_schedule_empty">Ештеңе табылмады</string>
+    <string name="search_schedule_empty_hint">Іздеу сұрауын өзгертіп көріңіз</string>
+    <string name="no_lessons_today">Бұл күні сабақ жоқ!</string>
+    <string name="no_lessons_today_hint">Демалуға немесе өзіндік дайындыққа тамаша күн 🎉</string>
+    <string name="week_odd">Алым</string>
+    <string name="week_even">Бөлім</string>
+    <string name="status_1c_online">1С онлайн • %1$s</string>
+    <string name="status_1c_offline">1С: %1$s</string>
+    <string name="today">Бүгін</string>
+    <string name="no_lessons_count">Сабақ жоқ</string>
+    <string name="lessons_count">%1$d сабақ • 08:30 — %2$s</string>
+    <string name="synced_at">Бүгін %1$s-де</string>
+    <string name="status_offline">Офлайн (1С қолжетімсіз)</string>
+    <string name="synced_success">Кесте 1С-мен синхрондалды</string>
+    <string name="sync_error">1С: %1$s (офлайн кэш көрсетілуде)</string>
+
+    <!-- Schedule loading states -->
+    <string name="loading_groups">Топтар тізімі алынуда…</string>
+    <string name="loading_schedule">Кесте жүктелуде…</string>
+    <string name="error_no_server">1С сервер мекенжайы бапталмаған</string>
+    <string name="error_no_server_hint">Параметрлерді ашып, 1С сервер URL мекенжайын көрсетіңіз</string>
+    <string name="error_connection">1С серверіне қосылу мүмкін болмады</string>
+    <string name="error_connection_hint">Сервер мекенжайы мен желі қолжетімділігін тексеріп, «Қайталау» батырмасын басыңыз</string>
+    <string name="open_settings">Параметрлерді ашу</string>
+    <string name="demo_mode_banner">Демо-режим: деректер нақты 1С-ке қосылмаған</string>
+
+    <!-- Group select -->
+    <string name="select_your_group">Өз тобыңызды таңдаңыз</string>
+    <string name="search_group">Топты немесе мамандықты іздеу…</string>
+    <string name="course_label">%1$s • %2$d курс</string>
+
+    <!-- Bells -->
+    <string name="bell_schedule_title">Қоңырау кестесі</string>
+    <string name="bell_lesson_duration">Сабақтың ұзақтығы — 1 сағат 30 минут</string>
+    <string name="bell_break">үзіліс %1$d мин</string>
+
+    <!-- Lesson types -->
+    <string name="lesson_type_lecture">Дәріс</string>
+    <string name="lesson_type_practice">Тәжірибе</string>
+    <string name="lesson_type_lab">Зертханалық</string>
+    <string name="lesson_type_exam">Сынақ / Емтихан</string>
+    <string name="lesson_current">Қазір жүруде</string>
+    <string name="lesson_replacement_label">Алмастыру / Өзгеріс:</string>
+
+    <!-- Sync actions -->
+    <string name="action_refresh">1С-мен синхрондау</string>
+    <string name="action_search">Кестені іздеу</string>
+    <string name="action_bells">Қоңырау кестесі</string>
+    <string name="action_settings">Параметрлер</string>
+    <string name="action_select_group">Топты таңдау</string>
 </resources>

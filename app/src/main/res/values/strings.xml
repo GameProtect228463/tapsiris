@@ -1,25 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
+    <!-- App -->
     <string name="app_name">Tapsiris concept</string>
+    <string name="app_title_full">Тапсырыс — Расписание колледжа</string>
+    <string name="app_system_subtitle">Информационная система для студентов</string>
+    <string name="app_version">Версия приложения</string>
+    <string name="app_version_number">v0.0.1-concept (Сборка 2026.11)</string>
+
+    <!-- Common -->
+    <string name="back">Назад</string>
+    <string name="cancel">Отмена</string>
+    <string name="ok">Понятно</string>
+    <string name="loading">Загрузка…</string>
+    <string name="retry">Повторить</string>
+    <string name="search">Поиск</string>
+    <string name="clear">Очистить</string>
+
+    <!-- Language -->
     <string name="settings_language">Язык интерфейса</string>
     <string name="language_ru">Русский</string>
     <string name="language_kk">Қазақша</string>
     <string name="language_us">English</string>
-    <string name="settings_name">Настройки</string>
-    <string name="back">Назад</string>
-    <string name="auto_sync_subtitle">Проверять изменения в 1С при запуске</string>
-    <string name="integration_1c">Интеграция с 1С:Колледж</string>
-    <string name="server_params_1c">Параметры сервера 1С</string>
-    <string name="address_not_configured">Адрес не настроен</string>
-    <string name="about_app">О приложении</string>
-    <string name="app_title_full">Тапсырыс — Расписание колледжа</string>
-    <string name="app_system_subtitle">Информационная система для студентов</string>
-    <string name="app_version">Версия приложения</string>
-    <string name="app_version_number">v0.0.1-concept (Сборка 2026.10)</string>
     <string name="select_language_title">Выберите язык / Тілді таңдаңыз</string>
-    <string name="cancel">Отмена</string>
-    <string name="server_settings_saved">Настройки сервера 1С сохранены</string>
+
+    <!-- Settings -->
+    <string name="settings_name">Настройки</string>
     <string name="student_profile">Профиль студента</string>
     <string name="group">Группа</string>
     <string name="guest_access">Гостевой доступ</string>
@@ -31,12 +37,17 @@
     <string name="remind_about_couples">Напоминать о парах</string>
     <string name="notification_couples">Уведомление за 15 минут до начала занятия</string>
     <string name="auto_sync">Автосинхронизация</string>
-    <string name="err_enter_login">Введите логин или номер студбилета</string>
-    <string name="err_enter_password">Введите пароль</string>
-    <string name="err_enter_full_name">Введите ваше ФИО</string>
-    <string name="err_create_login">Придумайте логин или укажите студбилет</string>
-    <string name="err_password_short">Пароль должен содержать минимум 4 символа</string>
-    <string name="student_prefix">Студент</string>
+    <string name="auto_sync_subtitle">Проверять изменения в 1С при запуске</string>
+    <string name="about_app">О приложении</string>
+    <string name="server_settings_saved">Настройки сервера 1С сохранены</string>
+
+    <!-- 1C Integration -->
+    <string name="integration_1c">Интеграция с 1С:Колледж</string>
+    <string name="server_params_1c">Параметры сервера 1С</string>
+    <string name="address_not_configured">Адрес не настроен</string>
+    <string name="sync_info_1c">Данные расписания синхронизируются с сервером 1С колледжа</string>
+
+    <!-- Auth -->
     <string name="tab_login">Вход</string>
     <string name="tab_register">Регистрация</string>
     <string name="label_full_name">ФИО студента</string>
@@ -49,5 +60,64 @@
     <string name="btn_sign_in">Войти</string>
     <string name="btn_register">Зарегистрироваться</string>
     <string name="btn_continue_guest">Продолжить без регистрации</string>
-    <string name="sync_info_1c">Данные расписания синхронизируются с сервером 1С колледжа</string>
+    <string name="student_prefix">Студент</string>
+    <string name="err_enter_login">Введите логин или номер студбилета</string>
+    <string name="err_enter_password">Введите пароль</string>
+    <string name="err_enter_full_name">Введите ваше ФИО</string>
+    <string name="err_create_login">Придумайте логин или укажите студбилет</string>
+    <string name="err_password_short">Пароль должен содержать минимум 4 символа</string>
+
+    <!-- Schedule screen -->
+    <string name="select_group">Выберите группу</string>
+    <string name="search_schedule">Поиск предмета, кабинета, учителя…</string>
+    <string name="search_schedule_empty">Ничего не найдено</string>
+    <string name="search_schedule_empty_hint">Попробуйте изменить поисковый запрос</string>
+    <string name="no_lessons_today">В этот день пар нет!</string>
+    <string name="no_lessons_today_hint">Отличный день для отдыха или самоподготовки 🎉</string>
+    <string name="week_odd">Числитель</string>
+    <string name="week_even">Знаменатель</string>
+    <string name="status_1c_online">1С онлайн • %1$s</string>
+    <string name="status_1c_offline">1С: %1$s</string>
+    <string name="today">Сегодня</string>
+    <string name="no_lessons_count">Нет пар</string>
+    <string name="lessons_count">%1$d пары • 08:30 — %2$s</string>
+    <string name="synced_at">Сегодня в %1$s</string>
+    <string name="status_offline">Офлайн (1С недоступен)</string>
+    <string name="synced_success">Расписание синхронизировано с 1С</string>
+    <string name="sync_error">1С: %1$s (показан офлайн кэш)</string>
+
+    <!-- Schedule loading states -->
+    <string name="loading_groups">Получение списка групп…</string>
+    <string name="loading_schedule">Загрузка расписания…</string>
+    <string name="error_no_server">Адрес сервера 1С не настроен</string>
+    <string name="error_no_server_hint">Откройте настройки и укажите URL сервера 1С</string>
+    <string name="error_connection">Не удалось подключиться к серверу 1С</string>
+    <string name="error_connection_hint">Проверьте адрес сервера и доступность сети, затем нажмите «Повторить»</string>
+    <string name="open_settings">Открыть настройки</string>
+    <string name="demo_mode_banner">Демо-режим: данные не подключены к реальному 1С</string>
+
+    <!-- Group select -->
+    <string name="select_your_group">Выберите вашу группу</string>
+    <string name="search_group">Поиск группы или специальности…</string>
+    <string name="course_label">%1$s • %2$d курс</string>
+
+    <!-- Bells -->
+    <string name="bell_schedule_title">Расписание звонков</string>
+    <string name="bell_lesson_duration">Длительность пары — 1 час 30 минут</string>
+    <string name="bell_break">перерыв %1$d мин</string>
+
+    <!-- Lesson types -->
+    <string name="lesson_type_lecture">Лекция</string>
+    <string name="lesson_type_practice">Практика</string>
+    <string name="lesson_type_lab">Лабораторная</string>
+    <string name="lesson_type_exam">Зачет / Экзамен</string>
+    <string name="lesson_current">Идёт сейчас</string>
+    <string name="lesson_replacement_label">Замена / Изменение:</string>
+
+    <!-- Sync actions -->
+    <string name="action_refresh">Синхронизация с 1С</string>
+    <string name="action_search">Поиск по расписанию</string>
+    <string name="action_bells">Расписание звонков</string>
+    <string name="action_settings">Настройки</string>
+    <string name="action_select_group">Выбрать группу</string>
 </resources>
