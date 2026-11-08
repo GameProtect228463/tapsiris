@@ -32,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.School
@@ -140,7 +141,13 @@ fun ScheduleScreenContent(
                     Surface(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .clickable { showGroupSheet = true },
+                            .then(
+                                if (state.canChangeGroup) {
+                                    Modifier.clickable { showGroupSheet = true }
+                                } else {
+                                    Modifier
+                                }
+                            ),
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
                     ) {
                         Row(
@@ -148,24 +155,29 @@ fun ScheduleScreenContent(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.School,
-                                contentDescription = null,
+                                imageVector = if (state.canChangeGroup) Icons.Default.School else Icons.Default.Lock,
+                                contentDescription = if (state.canChangeGroup) null else stringResource(R.string.student_group_locked),
                                 modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = state.selectedGroup?.name
-                                    ?: stringResource(R.string.select_group),
+                                text = if (state.canChangeGroup) {
+                                    state.selectedGroup?.name ?: stringResource(R.string.select_group)
+                                } else {
+                                    "${stringResource(R.string.my_group)}: ${state.selectedGroup?.name ?: state.assignedGroupName ?: ""}"
+                                },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = stringResource(R.string.action_select_group),
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                            if (state.canChangeGroup) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = stringResource(R.string.action_select_group),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
                         }
                     }
                 },
@@ -402,7 +414,7 @@ fun ScheduleScreenContent(
         }
     }
 
-    if (showGroupSheet) {
+    if (showGroupSheet && state.canChangeGroup) {
         GroupSelectSheet(
             groups = state.groups,
             selectedGroup = state.selectedGroup,

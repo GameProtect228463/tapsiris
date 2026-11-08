@@ -1,12 +1,13 @@
 package com.TJPK.tapsiris
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,12 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.appcompat.app.AppCompatActivity
 import com.TJPK.tapsiris.data.local.OneCSettingsManager
 import com.TJPK.tapsiris.data.local.UserManager
+import com.TJPK.tapsiris.data.local.UserRole
 import com.TJPK.tapsiris.data.mock.MockScheduleData
 import com.TJPK.tapsiris.data.repository.ScheduleRepositoryImpl
 import com.TJPK.tapsiris.domain.model.WeekType
+import com.TJPK.tapsiris.notifications.NotificationHelper
 import com.TJPK.tapsiris.presentation.auth.AuthScreen
 import com.TJPK.tapsiris.presentation.schedule.ScheduleScreen
 import com.TJPK.tapsiris.presentation.schedule.ScheduleScreenContent
@@ -35,13 +37,14 @@ import com.TJPK.tapsiris.presentation.schedule.ScheduleViewModel
 import com.TJPK.tapsiris.presentation.settings.SettingsScreen
 import com.TJPK.tapsiris.ui.theme.TapsirizTheme
 import com.TJPK.tapsiris.utils.LanguageManager
-import com.TJPK.tapsiris.R
+import com.TJPK.tapsiris.utils.ThemeManager
+import com.TJPK.tapsiris.utils.ThemeMode
 
 /**
  * Экраны навигации приложения
  */
 enum class AppScreen {
-    AUTH,       // Экран входа / регистрации (при первом открытии)
+    AUTH,       // Экран входа / регистрации (3 роли: Студент, Преподаватель, Админ)
     SCHEDULE,   // Главный экран расписания
     SETTINGS    // Экран настроек (с пасхалкой 15 кликов на версию)
 }
@@ -49,8 +52,8 @@ enum class AppScreen {
 /**
  * =========================================================================================
  * СЛОЙ APP / ENTRY POINT: Главная активность приложения.
- * Инициализирует зависимости (UserManager, SettingsManager, Repository, ViewModel)
- * и управляет переходами между экранами авторизации, расписания и настроек.
+ * Инициализирует зависимости (UserManager, SettingsManager, Repository, ViewModel),
+ * управляет языком, темой оформления, каналами уведомлений и переходами между экранами.
  * =========================================================================================
  */
 class MainActivity : AppCompatActivity() {
@@ -60,19 +63,36 @@ class MainActivity : AppCompatActivity() {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val settingsManager = OneCSettingsManager(applicationContext)
-                val repository = ScheduleRepositoryImpl(settingsManager)
-                return ScheduleViewModel(repository, settingsManager, applicationContext) as T
+                val userManager = UserManager(applicationContext)
+                val repository = ScheduleRepositoryImpl(settingsManager, applicationContext)
+                return ScheduleViewModel(repository, settingsManager, userManager, applicationContext) as T
             }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LanguageManager.applySavedLanguage(this)
+        ThemeManager.init(this)
+        NotificationHelper.createNotificationChannels(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
-            TapsirizTheme {
+            val themeMode by ThemeManager.themeModeState.collectAsState()
+            val themePalette by ThemeManager.themePaletteState.collectAsState()
+            val isSystemDark = isSystemInDarkTheme()
+
+            val isDark = when (themeMode) {
+                ThemeMode.SYSTEM -> isSystemDark
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            }
+
+            TapsirizTheme(darkTheme = isDark, palette = themePalette) {
                 val userManager = remember { UserManager(applicationContext) }
+                val settingsManager = remember { OneCSettingsManager(applicationContext) }
+                val repository = remember { ScheduleRepositoryImpl(settingsManager, applicationContext) }
+
                 var currentScreen by remember {
                     mutableStateOf(if (userManager.isLoggedIn()) AppScreen.SCHEDULE else AppScreen.AUTH)
                 }
@@ -95,17 +115,22 @@ class MainActivity : AppCompatActivity() {
                             AppScreen.AUTH -> {
                                 AuthScreen(
                                     groups = uiState.groups.ifEmpty { MockScheduleData.groups },
+                                    onLoadGroups = { repository.getGroups() },
+                                    onLoadGroupsFromDb = { repository.getGroupsFromDb() },
+                                    onAuthenticate = { login, password, role ->
+                                        repository.authenticate(login, password, role)
+                                    },
                                     onAuthSuccess = { profile ->
                                         userManager.saveUser(profile)
                                         userProfile = profile
-                                        uiState.groups.find { it.name.equals(profile.groupName, ignoreCase = true) }?.let {
-                                            viewModel.onEvent(ScheduleUiEvent.SelectGroup(it))
-                                        }
+                                        viewModel.onEvent(ScheduleUiEvent.UpdateUserContext(profile))
                                         currentScreen = AppScreen.SCHEDULE
                                     },
-                                    onGuestLogin = { defaultGroup ->
-                                        userManager.loginAsGuest(defaultGroup)
-                                        userProfile = userManager.getUserProfile()
+                                    onGuestLogin = { groupName, groupId ->
+                                        userManager.loginAsGuest(groupName, groupId)
+                                        val profile = userManager.getUserProfile()
+                                        userProfile = profile
+                                        viewModel.onEvent(ScheduleUiEvent.UpdateUserContext(profile))
                                         currentScreen = AppScreen.SCHEDULE
                                     }
                                 )
@@ -125,6 +150,9 @@ class MainActivity : AppCompatActivity() {
                                     onNavigateBack = { currentScreen = AppScreen.SCHEDULE },
                                     onLogout = {
                                         userManager.logout()
+                                        val profile = userManager.getUserProfile()
+                                        userProfile = profile
+                                        viewModel.onEvent(ScheduleUiEvent.UpdateUserContext(profile))
                                         currentScreen = AppScreen.AUTH
                                     },
                                     onSaveServerConfig = {
@@ -166,7 +194,7 @@ fun AuthScreenPreview() {
         AuthScreen(
             groups = MockScheduleData.groups,
             onAuthSuccess = {},
-            onGuestLogin = {}
+            onGuestLogin = { _, _ -> }
         )
     }
 }
@@ -189,6 +217,3 @@ fun ScheduleScreenDarkPreview() {
         )
     }
 }
-
-
-//  салам

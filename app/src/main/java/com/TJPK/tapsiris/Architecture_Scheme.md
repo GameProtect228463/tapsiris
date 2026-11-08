@@ -1,5 +1,5 @@
 # Архитектурная схема — «Тапсырыс» (Clean Architecture + MVI/MVVM)
-> Обновлено: 2026-11-01 | Версия приложения: v0.0.1-concept
+> Обновлено: 2026-11-07 | Версия приложения: v0.0.1-concept.4
 
 ---
 
@@ -8,26 +8,27 @@
 ```mermaid
 flowchart TD
   subgraph APP ["App Entry Point"]
-    MA["MainActivity.kt\nAppCompatDelegate · LanguageManager\nNavigation: AUTH → SCHEDULE → SETTINGS"]
+    MA["MainActivity.kt\nAppCompatDelegate · LanguageManager · ThemeManager · NotificationHelper\nNavigation: AUTH → SCHEDULE → SETTINGS\nПередача контекста пользователя в ViewModel"]
   end
 
   subgraph Presentation ["Presentation Layer (UI — Jetpack Compose + MVI)"]
     direction TB
 
     subgraph Auth ["auth/"]
-      AS["AuthScreen.kt\nВход · Регистрация · Гостевой вход\nLanguageSelectDialog"]
+      AS["AuthScreen.kt\n3 типа аккаунтов (Студент / Преподаватель / Админ)\nАвторизация через 1С · Подгрузка групп из БД\nДемо-кнопки · Гостевой вход"]
     end
 
     subgraph Schedule ["schedule/"]
-      SS["ScheduleScreen.kt\nAnimatedContent: Loading / Error / Success"]
-      VM["ScheduleViewModel.kt\nStateFlow · appContext для строк"]
-      UIS["ScheduleUiState\nloadState: ScheduleLoadState\nisDemoMode · is1CConnected"]
-      EVT["ScheduleUiEvent\nSelectGroup · SelectWeekType · Refresh\nUpdateServerConfig · ToggleSearch …"]
+      SS["ScheduleScreen.kt\nAnimatedContent: Loading / Error / Success\nИконка Lock + 'Моя группа' для студентов\nСвободный выбор для Преподавателя / Админа"]
+      VM["ScheduleViewModel.kt\nStateFlow · canChangeGroup · currentUserRole\nИзоляция групп для студентов · Уведомления о заменах"]
+      UIS["ScheduleUiState\nloadState: ScheduleLoadState\ncanChangeGroup: Boolean\ncurrentUserRole: UserRole\nassignedGroupName: String?"]
+      EVT["ScheduleUiEvent\nSelectGroup · SelectWeekType · Refresh\nUpdateUserContext · UpdateServerConfig …"]
       LS["ScheduleLoadState\n● Loading(message)\n● Error(title, hint, showSettingsButton)\n● Success"]
     end
 
     subgraph Settings ["settings/"]
-      SET["SettingsScreen.kt\nПрофиль · Язык · Уведомления · 1С · О приложении\nEasterEgg (15 кликов)"]
+      SET["SettingsScreen.kt\nПрофиль (роль 1С) · Смена темы · Язык · Уведомления · 1С · О приложении\nEasterEgg (15 кликов)"]
+      TSD["ThemeSelectDialog.kt\nРежимы: SYSTEM / LIGHT / DARK\nПалитры: Classic / Mint / Pine / Ocean"]
       LSD["LanguageSelectDialog.kt\nRadioButton · currentCode"]
     end
 
@@ -42,26 +43,34 @@ flowchart TD
 
   subgraph Domain ["Domain Layer (Бизнес-логика — без зависимостей Android)"]
     MDL["ScheduleModels.kt\nLesson · DaySchedule · StudentGroup\nBellTime · WeekType · LessonType"]
-    RI["ScheduleRepository.kt\ninterface: getGroups / getSchedule\ngetBells / pingServer"]
+    RI["ScheduleRepository.kt\ninterface: getGroups / getSchedule / getBells\npingServer / authenticate(login, password, role)"]
   end
 
   subgraph Data ["Data Layer (Источники данных)"]
-    RIMPL["ScheduleRepositoryImpl.kt\nSingle Source of Truth\nонлайн → 1С · офлайн → Mock"]
-    API["OneCApiClient.kt\nHTTP GET · Basic Auth (Base64)\nJSON → Domain Models\nDispatchers.IO · timeout 7s"]
+    RIMPL["ScheduleRepositoryImpl.kt\nSingle Source of Truth\n1С Сервер + SQLite DB + Fallback MockScheduleData"]
+    DB["ScheduleDatabaseHelper.kt (local/db)\nSQLiteOpenHelper · Таблица student_groups\ngetAllGroups · saveGroups · findGroupByName"]
+    API["OneCApiClient.kt\nHTTP GET / POST /auth\nBasic Auth · Dispatchers.IO · timeout 7s"]
     CFG["ServerConfig.kt\nserverUrl · username1C\npassword1C · isDemoMode"]
     SM["OneCSettingsManager.kt\nSharedPreferences: one_c_config_prefs\ngetConfig / saveConfig"]
-    UM["UserManager.kt\nSharedPreferences: user_auth_prefs\nUserProfile · isGuest · logout"]
-    MK["MockScheduleData.kt\nОфлайн-кэш · Compose Preview\nДемо-данные при isDemoMode=true"]
+    UM["UserManager.kt\nSharedPreferences: user_auth_prefs\nUserProfile · UserRole (STUDENT, TEACHER, ADMIN) · isGuest"]
+    NM["NotificationSettingsManager.kt\nSharedPreferences: notification_prefs\nisRemindersEnabled · isReplacementsEnabled · minutesBefore"]
+    MK["MockScheduleData.kt\nОфлайн-кэш и аккаунты 1С: Студент, Преподаватель, Админ"]
   end
 
-  subgraph i18n ["Локализация (res/)"]
-    STR["strings.xml (ru)\nstrings.xml (kk — Қазақша)\nstrings.xml (en — English)"]
-    LC2["locale_config.xml\nru · kk · en"]
+  subgraph Utils ["Utils & Notifications Layer"]
+    TM["ThemeManager.kt\nStateFlow<ThemeMode> · StateFlow<ThemePalette>\nSharedPreferences: theme_prefs\nМгновенная смена без recreate()"]
+    NH["NotificationHelper.kt\nКанал channel_schedule_notifications (API 26+)\nPOST_NOTIFICATIONS (API 33+) · Тест · Замены · Пары"]
+    LRR["LessonReminderReceiver.kt\nBroadcastReceiver для сигналов AlarmManager"]
     LM["LanguageManager.kt\nAppCompatDelegate.setApplicationLocales\nSharedPrefs: settings_prefs"]
   end
 
+  subgraph UITheme ["ui/theme"]
+    TH["Theme.kt\nTapsirizTheme(darkTheme, palette)"]
+    COL["Color.kt\nПалитры Classic, Mint, Pine, Ocean\nБез конфликтов сигнатур JVM"]
+  end
+
   subgraph Server1C ["Сервер 1С:Предприятие (HTTP-сервис)"]
-    HS["HTTP-сервис /hs/schedule\nGET /ping\nGET /groups\nGET /schedule?groupId=&week=odd|even\nGET /bells"]
+    HS["HTTP-сервис /hs/schedule\nGET /ping\nPOST /auth\nGET /groups\nGET /schedule?groupId=&week=odd|even\nGET /bells"]
   end
 
   %% ── Поток UI событий ──────────────────────────────────────
@@ -71,19 +80,36 @@ flowchart TD
   UIS -->|"collectAsState()"| SS
   UIS --> LS
 
-  %% ── Поток данных ──────────────────────────────────────────
-  VM -->|"вызывает"| RI
+  %% ── Авторизация в 1С и загрузка групп ───────────────────────
+  AS -->|"authenticate(login, pass, role)"| RI
+  AS -->|"onLoadGroups() подгрузка групп из БД"| RI
   RI -. "реализует" .-> RIMPL
-  RIMPL -->|"онлайн"| API
-  API -->|"HTTP GET + Basic Auth"| HS
-  HS -->|"JSON"| API
+  RIMPL -->|"онлайн POST /auth"| API
+  API -->|"JSON"| HS
+  RIMPL -->|"демо/офлайн fallback"| MK
+  RIMPL --> UM
+
+  %% ── Поток данных расписания и БД ───────────────────────────
+  VM -->|"вызывает"| RI
+  RIMPL -->|"кэш и выборка групп"| DB
+  RIMPL -->|"онлайн GET"| API
   RIMPL -->|"офлайн / demo"| MK
   RIMPL -->|"настройки"| SM
   SM --- CFG
 
+  %% ── Тема и Уведомления ─────────────────────────────────────
+  SET -->|"смена темы и палитры"| TSD
+  TSD -->|"setThemeMode / setThemePalette"| TM
+  TM -->|"collectAsState()"| MA
+  MA --> TH
+  SET -->|"тест / настройки уведомлений"| NH
+  NH --- NM
+  VM -->|"при обнаружении замен"| NH
+  LRR -->|"по будильнику"| NH
+
   %% ── Навигация ─────────────────────────────────────────────
   MA -->|"AUTH / SCHEDULE / SETTINGS"| AS & SS & SET
-  MA -->|"ViewModel Factory + appContext"| VM
+  MA -->|"ViewModel Factory + userManager + appContext"| VM
   MA -->|"UserManager"| UM
 
   %% ── Локализация ───────────────────────────────────────────
@@ -91,168 +117,67 @@ flowchart TD
   SET -->|"setLanguage(context, code)"| LM
   AS -->|"LanguageSelectDialog"| LSD
   LSD -->|"setLanguage"| LM
-  STR & LC2 --- LM
-
-  %% ── Компоненты ────────────────────────────────────────────
-  SS --- LC & DS & GS & BD & SD
-  SET --- LSD
 ```
 
 ---
 
-## 2. Навигация между экранами
+## 2. Модуль учетных записей 1С (3 вида аккаунтов)
 
-```mermaid
-stateDiagram-v2
-    [*] --> AUTH : первый запуск\n(UserManager.isLoggedIn = false)
-    [*] --> SCHEDULE : повторный запуск\n(isLoggedIn = true)
+Приложение поддерживает 3 роли учетных записей, интегрированных с базой 1С:Колледж:
 
-    AUTH --> SCHEDULE : onAuthSuccess / onGuestLogin
-    SCHEDULE --> SETTINGS : кнопка шестерёнки
-    SETTINGS --> SCHEDULE : кнопка «Назад» / BackHandler
-    SETTINGS --> AUTH : onLogout → UserManager.logout()
-```
+| Роль | `UserRole` | Описание и разграничение доступа | Тестовый логин (1С) |
+|------|------------|-----------------------------------|----------------------|
+| **Студент** | `STUDENT` | Просмотр расписания **строго своей группы** (жесткая привязка). Переключение чужих групп заблокировано | `student` / пароль `1234` |
+| **Преподаватель** | `TEACHER` | Просмотр расписания любых групп, кафедры/отделения. Свободный выбор групп из БД | `teacher` / пароль `1234` |
+| **Администратор** | `ADMINISTRATOR` | Полный доступ: управление расписанием, выбор любых групп, настройка сервера 1С | `admin` / пароль `admin` |
 
 ---
 
-## 3. Состояния загрузки главного экрана (`ScheduleLoadState`)
+## 3. Модуль смены темы оформления
 
-```mermaid
-stateDiagram-v2
-    [*] --> Loading : init ViewModel
+### Режимы темы (`ThemeMode`):
+- `SYSTEM` — Следовать системной теме устройства (по умолчанию)
+- `LIGHT` — Светлая тема
+- `DARK` — Тёмная тема
 
-    Loading --> Loading : loadGroups → loadBells → loadSchedule
-    Loading --> Error_NoServer : serverUrl.isBlank() && !isDemoMode
-    Loading --> Error_Connection : сетевой сбой / HTTP ≠ 2xx
-    Loading --> Success : данные получены\n(онлайн или демо)
-
-    Error_NoServer --> Loading : Refresh / UpdateServerConfig
-    Error_Connection --> Loading : Refresh
-
-    Success --> Loading : Refresh / SelectGroup / SelectWeekType
-    Success --> Success : SelectDay / SearchQueryChanged / ToggleSearch
-
-    Error_NoServer : Error\ntitle: error_no_server\nshowSettingsButton = true
-    Error_Connection : Error\ntitle: error_connection\nshowSettingsButton = false
-```
+### Цветовые палитры (`ThemePalette`):
+- **Классическая** (`DEFAULT`) — Indigo / Deep Purple
+- **Изумрудная мята** (`MINT`) — Свежая мятно-зеленая гамма с акцентом Claret
+- **Лесная хвоя** (`PINE`) — Хвойный зеленый, Guerrilla Forest и Americana Blue
+- **Океанический циан** (`OCEAN`) — Dark Cyan, Alabaster Grey и Deep Evergreen
 
 ---
 
-## 4. Механизм локализации (смена языка)
+## 4. Модуль уведомлений (Notifications)
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Screen as AuthScreen / SettingsScreen
-    participant LSD as LanguageSelectDialog
-    participant LM as LanguageManager
-    participant ACD as AppCompatDelegate
-    participant SP as SharedPreferences
-
-    User->>Screen: нажимает «Язык»
-    Screen->>LSD: showLanguageDialog = true\ncurrentCode = getCurrentLanguageCode()
-    LSD-->>User: показывает RadioButton\nс текущим языком
-    User->>LSD: выбирает "kk" / "ru" / "en"
-    LSD->>LM: setLanguage(context, code)
-    LM->>SP: putString(KEY_LANGUAGE, code)
-    LM->>ACD: setApplicationLocales(LocaleListCompat)
-    ACD-->>Screen: Activity.recreate() автоматически
-    Note over Screen: Весь UI перестраивается\nс новым языком
-```
+- **Канал уведомлений**: `channel_schedule_notifications` (`IMPORTANCE_HIGH`)
+- **Android 13+ (API 33+)**: runtime-запрос `POST_NOTIFICATIONS`
+- **Напоминания о парах**: за 15 минут до начала занятия
+- **Оповещения о заменах**: при обнаружении изменений в 1С
+- **Тестовое уведомление**: мгновенная проверка прямо из экрана настроек
+- **LessonReminderReceiver**: приёмник сигналов `AlarmManager`
 
 ---
 
-## 5. Назначение пакетов и модулей
+## 5. Модуль локальной базы данных (SQLite) и изоляция групп студентов
 
-### 📁 `domain/` — Ядро (не зависит ни от чего Android)
+1. **Автоматическая подгрузка групп из базы 1С в SQLite**:
+   - При каждом запуске и по кнопке «Обновить» (`ScheduleUiEvent.Refresh`) репозиторий автоматически запрашивает актуальный список групп из HTTP-сервиса 1С:Колледж (`OneCApiClient.getGroups()`).
+   - Свежие группы из 1С автоматически сохраняются и обновляются в локальной SQLite БД (`ScheduleDatabaseHelper.saveGroups()`).
+   - Парсер `parseGroupsJson` поддерживает гибкие схемы 1С (`id`, `groupId`, `code`, `Код`, `Наименование`, `Курс`, `Отделение`).
+   - При отсутствии сети или сбоях связи группы мгновенно отдаются из локальной БД SQLite.
 
-| Файл | Содержимое |
-|------|-----------|
-| `model/ScheduleModels.kt` | `Lesson`, `DaySchedule`, `StudentGroup`, `BellTime`, `WeekType`, `LessonType` |
-| `repository/ScheduleRepository.kt` | Контракт: `getGroups`, `getSchedule`, `getBells`, `pingServer` |
+2. **Подгрузка групп из БД при регистрации**:
+   - На экране входа и регистрации (`AuthScreen`) при переключении на вкладку «Регистрация» группы подгружаются напрямую из локальной БД SQLite через `onLoadGroupsFromDb()` (`repository.getGroupsFromDb()`).
+   - Студент выбирает свою группу из выпадающего списка `GroupSelectSheet`, получая актуальные данные без ожидания сетевых запросов.
+   - Под полем выбора группы выводится статус `«Группы загружаются из базы данных»`.
 
----
-
-### 📁 `data/` — Источники данных
-
-| Файл | Назначение |
-|------|-----------|
-| `remote/OneCApiClient.kt` | HTTP GET к 1С, `Authorization: Basic`, парсинг JSON → Domain. Timeout 7 с, `Dispatchers.IO` |
-| `remote/ServerConfig.kt` | `serverUrl`, `username1C`, `password1C`, `isDemoMode` |
-| `local/OneCSettingsManager.kt` | Хранение `ServerConfig` в `SharedPreferences (one_c_config_prefs)` |
-| `local/UserManager.kt` | Профиль студента (`UserProfile`), флаг `isGuest`, logout |
-| `mock/MockScheduleData.kt` | Офлайн-кэш и данные для Compose Preview. Используется если `isDemoMode = true` или сеть недоступна |
-| `repository/ScheduleRepositoryImpl.kt` | Single Source of Truth: сначала 1С → при неудаче или `isDemoMode` → Mock |
-
----
-
-### 📁 `presentation/` — UI-слой (Compose + MVI)
-
-#### `schedule/`
-
-| Файл | Назначение |
-|------|-----------|
-| `ScheduleUiState.kt` | Иммутабельное состояние: `loadState: ScheduleLoadState`, `isDemoMode`, `is1CConnected`, `groups`, `weekSchedule`, `displayLessons` |
-| `ScheduleLoadState` (sealed interface) | `Loading(message)` · `Error(title, hint, showSettingsButton)` · `Success` |
-| `ScheduleUiEvent` (sealed interface) | Все действия пользователя: `SelectGroup`, `Refresh`, `UpdateServerConfig` … |
-| `ScheduleViewModel.kt` | Принимает `appContext: Context` для строк ресурсов. Проверяет `serverUrl` перед запросом. Управляет переходами `loadState` |
-| `ScheduleScreen.kt` | `AnimatedContent` по `loadState`: спиннер загрузки → экран ошибки с Retry / Open Settings → расписание. Демо-баннер |
-
-#### `auth/`
-
-| Файл | Назначение |
-|------|-----------|
-| `AuthScreen.kt` | Вход / Регистрация / Гость. Валидация через `stringResource`. Кнопка смены языка → `LanguageSelectDialog` |
-
-#### `settings/`
-
-| Файл | Назначение |
-|------|-----------|
-| `SettingsScreen.kt` | Профиль · Язык (текущий в subtitle) · Уведомления · 1С · О приложении. Пасхалка: 15 кликов на версию |
-| `LanguageSelectDialog.kt` | `RadioButton` со значком текущего языка. Параметр `currentCode` |
-| `EasterEggVideoDialog.kt` | Видео-пасхалка |
-
-#### `components/`
-
-| Файл | Что переведено / изменено |
-|------|--------------------------|
-| `LessonCard.kt` | Типы занятий (`lesson_type_*`), «Идёт сейчас» (`lesson_current`), «Замена» (`lesson_replacement_label`) |
-| `DaySelector.kt` | «Сегодня» (`today`) |
-| `GroupSelectSheet.kt` | Заголовок, поиск, формат `course_label` |
-| `BellScheduleDialog.kt` | Заголовок, длительность пары, `bell_break` |
-| `ServerSettingsDialog.kt` | Диалог параметров и ping-теста 1С |
-
----
-
-### 📁 `utils/`
-
-| Файл | Назначение |
-|------|-----------|
-| `LanguageManager.kt` | `setLanguage(context, code)` — сохраняет в `SharedPrefs` + `AppCompatDelegate.setApplicationLocales`. **Без `recreate()`** — платформа делает сама. `getCurrentLanguageCode(context)` — для отображения выбранного языка в диалоге |
-
----
-
-### 📁 `res/`
-
-| Ресурс | Назначение |
-|--------|-----------|
-| `values/strings.xml` | 🇷🇺 Русский — базовый язык (70+ строк) |
-| `values-kk/strings.xml` | 🇰🇿 Қазақша |
-| `values-en/strings.xml` | 🇬🇧 English |
-| `xml/locale_config.xml` | Декларирует поддерживаемые локали для Android 13+ (`ru`, `kk`, `en`) |
-| `xml/backup_rules.xml` | Правила резервного копирования |
-| `raw/musor_drop_green_screen.mp4` | Видео для пасхалки |
-
----
-
-## 6. Ключевые архитектурные решения
-
-| Решение | Обоснование |
-|---------|-------------|
-| **Clean Architecture (3 слоя)** | Domain не зависит от Android; легко тестировать бизнес-логику |
-| **MVI (Unidirectional Data Flow)** | Один иммутабельный `UiState` → нет рассинхрона между UI-элементами |
-| **`ScheduleLoadState` sealed interface** | UI отображает чёткий экран для каждого состояния (загрузка / ошибка / данные) без булевых флагов |
-| **`appContext` в ViewModel** | Строки сообщений (`userMessage`, `loadState.message`) берутся из ресурсов — не хардкод, автоматически локализованы |
-| **`AppCompatDelegate.setApplicationLocales`** | Смена языка без `recreate()` вручную; работает на API 24+; поддерживает системный выбор языка на API 33+ |
-| **`isDemoMode` в `ServerConfig`** | По умолчанию `true` — приложение работает без реального 1С сервера «из коробки» |
-| **Fallback Mock → 1С** | `ScheduleRepositoryImpl` пробует сеть, при сбое — Mock; UI видит только `Result<T>` |
+3. **Изоляция групп для студентов (`canChangeGroup = false`)**:
+   - Студент видит **строго и исключительно расписание своей группы** (жесткая привязка к профилю).
+   - В `ScheduleUiState` список `groups` фильтруется до единственной группы студента (`groups = listOf(studentGroup)`).
+   - В `ScheduleViewModel.onEvent(SelectGroup)` любые попытки переключения чужих групп блокируются (`if (!_uiState.value.canChangeGroup || currentUserRole == UserRole.STUDENT) return`).
+   - В интерфейсе `ScheduleScreen` (TopAppBar):
+     - Вместо стрелки выпадающего списка отображается иконка замка `Icons.Default.Lock`.
+     - Заголовок отображает: `Моя группа: <Название>` (с поддержкой локализации RU, KK, EN).
+     - Клик по плашке группы и вызов шторки выбора групп заблокированы.
+   - Преподаватели и Администраторы сохраняют свободный доступ ко всем группам колледжа.

@@ -120,4 +120,56 @@
     <string name="action_bells">Bell schedule</string>
     <string name="action_settings">Settings</string>
     <string name="action_select_group">Select group</string>
+    <!-- Theme Selection -->
+    <string name="app_theme">App theme</string>
+    <string name="theme_select_title">Theme &amp; Appearance</string>
+    <string name="theme_mode_title">Theme Mode</string>
+    <string name="theme_palette_title">Color Palette</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="palette_default">Classic Indigo</string>
+    <string name="palette_mint">Emerald Mint</string>
+    <string name="palette_pine">Forest Pine</string>
+    <string name="palette_ocean">Ocean Cyan</string>
+    <string name="theme_changed">Theme appearance updated</string>
+
+    <!-- Notifications -->
+    <string name="notifications_section">Notifications</string>
+    <string name="notifications_enable">Remind about lessons</string>
+    <string name="notifications_enable_desc">Notify 15 minutes before class begins</string>
+    <string name="notifications_replacements">Notify about substitutions</string>
+    <string name="notifications_replacements_desc">Alert when schedule changes occur</string>
+    <string name="notifications_send_test">Send test notification</string>
+    <string name="notifications_send_test_desc">Verify notifications are working</string>
+    <string name="notifications_test_sent">Test notification sent!</string>
+    <string name="notifications_permission_required">Notification permission is required</string>
+    <string name="notifications_permission_granted">Notification permission granted</string>
+    <string name="notification_channel_name">Schedule &amp; Lessons</string>
+    <string name="notification_channel_desc">Notifications for lessons and schedule substitutions</string>
+    <string name="notification_test_title">Tapsiris: Notifications active</string>
+    <string name="notification_test_body">Lesson reminders and substitutions are configured successfully!</string>
+    <string name="notification_lesson_reminder_title">Upcoming lesson: %1$s</string>
+    <string name="notification_lesson_reminder_body">In %1$d min in room %2$s • %3$s</string>
+    <string name="notification_replacement_title">Schedule substitution</string>
+    <string name="notification_replacement_body">Changes have occurred in your group\'s schedule</string>
+
+    <!-- User Roles (1C Base) -->
+    <string name="role_student">Student</string>
+    <string name="role_teacher">Teacher</string>
+    <string name="role_admin">Administrator</string>
+    <string name="select_role">Account Type</string>
+    <string name="select_role_subtitle">Select your role at the college</string>
+    <string name="auth_verifying_1c">Authenticating with 1C database…</string>
+    <string name="auth_source_1c">1C:College Database</string>
+    <string name="department_label">Department / Faculty</string>
+    <string name="quick_demo_login">Quick Demo Login (1C)</string>
+    <string name="demo_student">Student (student)</string>
+    <string name="demo_teacher">Teacher (teacher)</string>
+    <string name="demo_admin">Administrator (admin)</string>
+
+    <!-- Student Group Locking & Database -->
+    <string name="my_group">My group</string>
+    <string name="student_group_locked">Students can only view their own group\'s schedule</string>
+    <string name="groups_loaded_from_db">Groups loaded from database</string>
 </resources>

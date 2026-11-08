@@ -1,6 +1,8 @@
 package com.TJPK.tapsiris.data.remote
 
 import android.util.Base64
+import com.TJPK.tapsiris.data.local.UserProfile
+import com.TJPK.tapsiris.data.local.UserRole
 import com.TJPK.tapsiris.domain.model.BellTime
 import com.TJPK.tapsiris.domain.model.DaySchedule
 import com.TJPK.tapsiris.domain.model.Lesson
@@ -22,6 +24,8 @@ import java.net.URL
  * 1. Формирование HTTP-соединения и авторизацию (Basic Auth логин/пароль 1С).
  * 2. Выполнение сетевых запросов в фоновом потоке (Dispatchers.IO).
  * 3. Десериализацию JSON-ответов сервера 1С в чистые доменные модели (Domain Models).
+ * 4. Авторизацию пользователей (Студент, Преподаватель, Администратор) через HTTP-сервис 1С.
+ * 5. Поддержку вариативного регистра путей URL (/groups и /Groups) в 1С.
  * =========================================================================================
  */
 class OneCApiClient(private val config: ServerConfig) {
@@ -29,8 +33,8 @@ class OneCApiClient(private val config: ServerConfig) {
     private fun createConnection(endpointUrl: String): HttpURLConnection {
         val url = URL(endpointUrl)
         val conn = url.openConnection() as HttpURLConnection
-        conn.connectTimeout = 7000
-        conn.readTimeout = 7000
+        conn.connectTimeout = 5000
+        conn.readTimeout = 5000
         conn.requestMethod = "GET"
         conn.setRequestProperty("Accept", "application/json; charset=utf-8")
         conn.setRequestProperty("User-Agent", "Tapciriz-Android-Client/1.0")
@@ -45,99 +49,216 @@ class OneCApiClient(private val config: ServerConfig) {
 
     /**
      * Проверка доступности веб-сервиса 1С.
-     * Запрашивает конечную точку /ping.
+     * Запрашивает конечную точку /ping (или /Ping).
      */
     suspend fun ping(): Result<String> = withContext(Dispatchers.IO) {
-        try {
-            val trimmedUrl = config.serverUrl.trimEnd('/')
-            val conn = createConnection("$trimmedUrl/ping")
-            val code = conn.responseCode
-            if (code in 200..299) {
-                Result.success("Соединение с 1С успешно установлено! (Код $code)")
-            } else {
-                val errorStream = conn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
-                Result.failure(Exception("Сервер 1С вернул код $code. $errorStream"))
+        val trimmedUrl = config.serverUrl.trimEnd('/')
+        val endpoints = listOf("$trimmedUrl/ping", "$trimmedUrl/Ping")
+        var lastErr = ""
+
+        for (endpoint in endpoints) {
+            try {
+                val conn = createConnection(endpoint)
+                val code = conn.responseCode
+                if (code in 200..299) {
+                    return@withContext Result.success("Соединение с 1С успешно установлено! (Код $code)")
+                } else if (code == 404) {
+                    lastErr = "Код 404 ($endpoint не найден)"
+                    continue
+                } else {
+                    val errorStream = conn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+                    return@withContext Result.failure(Exception("Сервер 1С вернул код $code. $errorStream"))
+                }
+            } catch (e: Exception) {
+                lastErr = e.localizedMessage ?: e.toString()
             }
-        } catch (e: Exception) {
-            Result.failure(Exception("Не удалось связаться с 1С: ${e.localizedMessage}"))
         }
+        Result.failure(Exception("Не удалось связаться с 1С: $lastErr"))
     }
+
+    /**
+     * Авторизация пользователя (Студент, Преподаватель, Администратор) через сервис 1С.
+     */
+    suspend fun authenticate(login: String, password: String, role: UserRole): Result<UserProfile> =
+        withContext(Dispatchers.IO) {
+            val trimmedUrl = config.serverUrl.trimEnd('/')
+            val endpoints = listOf("$trimmedUrl/auth", "$trimmedUrl/Auth")
+            var lastErr = ""
+
+            for (endpoint in endpoints) {
+                try {
+                    val conn = createConnection(endpoint)
+                    conn.requestMethod = "POST"
+                    conn.doOutput = true
+                    conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+
+                    val payload = JSONObject().apply {
+                        put("login", login.trim())
+                        put("password", password)
+                        put("role", role.code)
+                    }
+
+                    conn.outputStream.bufferedWriter(Charsets.UTF_8).use {
+                        it.write(payload.toString())
+                    }
+
+                    val code = conn.responseCode
+                    if (code in 200..299) {
+                        val responseText = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                        val jsonObj = JSONObject(responseText)
+                        val profile = UserProfile(
+                            fullName = jsonObj.optString("fullName", jsonObj.optString("name", login)),
+                            login = jsonObj.optString("login", login),
+                            role = role,
+                            groupName = jsonObj.optString("groupName", jsonObj.optString("group", "")),
+                            department = jsonObj.optString("department", "Колледж"),
+                            isGuest = false
+                        )
+                        return@withContext Result.success(profile)
+                    } else if (code == 404) {
+                        lastErr = "Код 404 ($endpoint не найден)"
+                        continue
+                    } else {
+                        val err = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
+                        return@withContext Result.failure(Exception("1С вернул код $code: $err"))
+                    }
+                } catch (e: Exception) {
+                    lastErr = e.localizedMessage ?: e.toString()
+                }
+            }
+            Result.failure(Exception("Не удалось авторизоваться в 1С: $lastErr"))
+        }
 
     /**
      * Получение актуального списка групп из справочника 1С.
+     * Проверяет оба варианта регистра: /groups и /Groups.
      */
     suspend fun getGroups(): Result<List<StudentGroup>> = withContext(Dispatchers.IO) {
-        try {
-            val trimmedUrl = config.serverUrl.trimEnd('/')
-            val conn = createConnection("$trimmedUrl/groups")
-            val code = conn.responseCode
-            if (code in 200..299) {
-                val responseText = conn.inputStream.bufferedReader().use { it.readText() }
-                val groups = parseGroupsJson(responseText)
-                Result.success(groups)
-            } else {
-                Result.failure(Exception("Ошибка 1С (код $code)"))
+        val trimmedUrl = config.serverUrl.trimEnd('/')
+        val endpoints = listOf("$trimmedUrl/groups", "$trimmedUrl/Groups")
+        var lastErr = ""
+
+        for (endpoint in endpoints) {
+            try {
+                val conn = createConnection(endpoint)
+                val code = conn.responseCode
+                if (code in 200..299) {
+                    val responseText = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    val groups = parseGroupsJson(responseText)
+                    if (groups.isNotEmpty()) {
+                        return@withContext Result.success(groups)
+                    }
+                } else if (code == 404) {
+                    lastErr = "Код 404 ($endpoint не найден в 1С)"
+                    continue
+                } else {
+                    val errStream = conn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+                    return@withContext Result.failure(Exception("Ошибка 1С (код $code): $errStream"))
+                }
+            } catch (e: Exception) {
+                lastErr = e.localizedMessage ?: e.toString()
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
+        Result.failure(Exception("Не удалось получить группы из 1С: $lastErr"))
     }
 
     /**
-     * Получение расписания для группы и недели из регистра сведений / документов 1С.
+     * Получение расписания для группы и недели из регистра сведений 1С.
      */
     suspend fun getSchedule(groupId: String, weekType: WeekType): Result<List<DaySchedule>> =
         withContext(Dispatchers.IO) {
-            try {
-                val trimmedUrl = config.serverUrl.trimEnd('/')
-                val weekQuery = if (weekType == WeekType.ODD) "odd" else "even"
-                val conn = createConnection("$trimmedUrl/schedule?groupId=$groupId&week=$weekQuery")
-                val code = conn.responseCode
-                if (code in 200..299) {
-                    val responseText = conn.inputStream.bufferedReader().use { it.readText() }
-                    val days = parseScheduleJson(responseText)
-                    Result.success(days)
-                } else {
-                    Result.failure(Exception("Ошибка сервера 1С (код $code)"))
+            val trimmedUrl = config.serverUrl.trimEnd('/')
+            val weekQuery = if (weekType == WeekType.ODD) "odd" else "even"
+            val endpoints = listOf(
+                "$trimmedUrl/schedule?groupId=$groupId&week=$weekQuery",
+                "$trimmedUrl/Schedule?groupId=$groupId&week=$weekQuery"
+            )
+            var lastErr = ""
+
+            for (endpoint in endpoints) {
+                try {
+                    val conn = createConnection(endpoint)
+                    val code = conn.responseCode
+                    if (code in 200..299) {
+                        val responseText = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                        val days = parseScheduleJson(responseText)
+                        return@withContext Result.success(days)
+                    } else if (code == 404) {
+                        lastErr = "Код 404 ($endpoint не найден)"
+                        continue
+                    } else {
+                        val errStream = conn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+                        return@withContext Result.failure(Exception("Ошибка сервера 1С (код $code): $errStream"))
+                    }
+                } catch (e: Exception) {
+                    lastErr = e.localizedMessage ?: e.toString()
                 }
-            } catch (e: Exception) {
-                Result.failure(e)
             }
+            Result.failure(Exception("Не удалось получить расписание из 1С: $lastErr"))
         }
 
     /**
      * Получение расписания звонков колледжа.
      */
     suspend fun getBells(): Result<List<BellTime>> = withContext(Dispatchers.IO) {
-        try {
-            val trimmedUrl = config.serverUrl.trimEnd('/')
-            val conn = createConnection("$trimmedUrl/bells")
-            val code = conn.responseCode
-            if (code in 200..299) {
-                val responseText = conn.inputStream.bufferedReader().use { it.readText() }
-                val bells = parseBellsJson(responseText)
-                Result.success(bells)
-            } else {
-                Result.failure(Exception("Ошибка звонков 1С (код $code)"))
+        val trimmedUrl = config.serverUrl.trimEnd('/')
+        val endpoints = listOf("$trimmedUrl/bells", "$trimmedUrl/Bells")
+        var lastErr = ""
+
+        for (endpoint in endpoints) {
+            try {
+                val conn = createConnection(endpoint)
+                val code = conn.responseCode
+                if (code in 200..299) {
+                    val responseText = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    val bells = parseBellsJson(responseText)
+                    return@withContext Result.success(bells)
+                } else if (code == 404) {
+                    lastErr = "Код 404 ($endpoint не найден)"
+                    continue
+                } else {
+                    val errStream = conn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+                    return@withContext Result.failure(Exception("Ошибка звонков 1С (код $code): $errStream"))
+                }
+            } catch (e: Exception) {
+                lastErr = e.localizedMessage ?: e.toString()
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
+        Result.failure(Exception("Не удалось получить звонки из 1С: $lastErr"))
     }
 
     private fun parseGroupsJson(jsonStr: String): List<StudentGroup> {
         val list = mutableListOf<StudentGroup>()
-        val array = if (jsonStr.trim().startsWith("[")) JSONArray(jsonStr)
-        else JSONObject(jsonStr).optJSONArray("groups") ?: JSONArray()
+        val trimmed = jsonStr.trim()
+        val array = if (trimmed.startsWith("[")) JSONArray(trimmed)
+        else JSONObject(trimmed).optJSONArray("groups") ?: JSONArray()
 
         for (i in 0 until array.length()) {
             val obj = array.getJSONObject(i)
+            val id = obj.optString("id", obj.optString("groupId", obj.optString("code", obj.optString("Код", "group_$i"))))
+            val name = obj.optString("name", obj.optString("groupName", obj.optString("Наименование", obj.optString("group", "Группа $i"))))
+            val course = if (obj.has("course")) obj.optInt("course", 1) else obj.optInt("Курс", 1)
+
+            val dept = when {
+                obj.has("department") -> {
+                    val d = obj.opt("department")
+                    if (d is JSONObject) d.optString("name", d.optString("description", "Колледж"))
+                    else d?.toString() ?: "Колледж"
+                }
+                obj.has("Отделение") -> {
+                    val d = obj.opt("Отделение")
+                    if (d is JSONObject) d.optString("name", d.optString("description", "Колледж"))
+                    else d?.toString() ?: "Колледж"
+                }
+                else -> "Колледж"
+            }
+
             list.add(
                 StudentGroup(
-                    id = obj.optString("id", obj.optString("name", "group_$i")),
-                    name = obj.optString("name", "Группа $i"),
-                    course = obj.optInt("course", 1),
-                    department = obj.optString("department", "Колледж")
+                    id = id,
+                    name = name,
+                    course = if (course > 0) course else 1,
+                    department = dept
                 )
             )
         }

@@ -4,8 +4,14 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.TJPK.tapsiris.R
+import com.TJPK.tapsiris.data.local.NotificationSettingsManager
 import com.TJPK.tapsiris.data.local.OneCSettingsManager
+import com.TJPK.tapsiris.data.local.UserManager
+import com.TJPK.tapsiris.data.local.UserProfile
+import com.TJPK.tapsiris.data.local.UserRole
+import com.TJPK.tapsiris.domain.model.StudentGroup
 import com.TJPK.tapsiris.domain.repository.ScheduleRepository
+import com.TJPK.tapsiris.notifications.NotificationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,11 +24,15 @@ import java.util.Locale
 /**
  * =========================================================================================
  * СЛОЙ PRESENTATION: ViewModel управления экраном расписания.
+ * Загружает группы из базы данных и разграничивает доступ:
+ * Студент видит только свою группу (без возможности переключения),
+ * Преподаватели и Администраторы могут просматривать любые группы.
  * =========================================================================================
  */
 class ScheduleViewModel(
     private val repository: ScheduleRepository,
     private val settingsManager: OneCSettingsManager,
+    private val userManager: UserManager,
     private val appContext: Context
 ) : ViewModel() {
 
@@ -38,6 +48,8 @@ class ScheduleViewModel(
     fun onEvent(event: ScheduleUiEvent) {
         when (event) {
             is ScheduleUiEvent.SelectGroup -> {
+                // Если студент — переключение на чужие группы заблокировано
+                if (!_uiState.value.canChangeGroup || _uiState.value.currentUserRole == UserRole.STUDENT) return
                 _uiState.update { it.copy(selectedGroup = event.group) }
                 loadSchedule()
             }
@@ -60,7 +72,13 @@ class ScheduleViewModel(
                 }
             }
             ScheduleUiEvent.Refresh -> {
-                loadSchedule()
+                viewModelScope.launch {
+                    // Автоматически подгружаем свежие группы из 1С базы и обновляем локальную БД SQLite
+                    val groupsResult = repository.getGroups()
+                    val allGroups = groupsResult.getOrNull().orEmpty()
+                    applyGroupsForProfile(allGroups, userManager.getUserProfile())
+                    loadSchedule()
+                }
             }
             is ScheduleUiEvent.UpdateServerConfig -> {
                 settingsManager.saveConfig(event.newConfig)
@@ -72,6 +90,9 @@ class ScheduleViewModel(
                 }
                 loadSchedule()
             }
+            is ScheduleUiEvent.UpdateUserContext -> {
+                applyUserProfile(event.profile)
+            }
             ScheduleUiEvent.DismissMessage -> {
                 _uiState.update { it.copy(userMessage = null) }
             }
@@ -79,8 +100,9 @@ class ScheduleViewModel(
     }
 
     private fun loadInitialData() {
+        val userProfile = userManager.getUserProfile()
         viewModelScope.launch {
-            // Шаг 1: Загрузка групп
+            // Шаг 1: Загрузка групп из 1С (или локальной БД при офлайн)
             _uiState.update {
                 it.copy(loadState = ScheduleLoadState.Loading(
                     appContext.getString(R.string.loading_groups)
@@ -88,15 +110,16 @@ class ScheduleViewModel(
             }
 
             val groupsResult = repository.getGroups()
-            if (groupsResult.isSuccess) {
-                val groups = groupsResult.getOrNull().orEmpty()
-                _uiState.update {
-                    it.copy(
-                        groups = groups,
-                        selectedGroup = it.selectedGroup ?: groups.firstOrNull()
-                    )
+            val allGroups = groupsResult.getOrNull().orEmpty()
+
+            if (groupsResult.isFailure) {
+                val err = groupsResult.exceptionOrNull()?.localizedMessage
+                if (!err.isNullOrBlank()) {
+                    _uiState.update { it.copy(userMessage = err) }
                 }
             }
+
+            applyGroupsForProfile(allGroups, userProfile)
 
             // Шаг 2: Загрузка звонков
             val bellsResult = repository.getBells()
@@ -106,6 +129,67 @@ class ScheduleViewModel(
 
             // Шаг 3: Загрузка расписания
             loadSchedule()
+        }
+    }
+
+    private fun applyUserProfile(profile: UserProfile) {
+        viewModelScope.launch {
+            val groupsResult = repository.getGroups()
+            val allGroups = groupsResult.getOrNull().orEmpty()
+            applyGroupsForProfile(allGroups, profile)
+            loadSchedule()
+        }
+    }
+
+    private fun applyGroupsForProfile(allGroups: List<StudentGroup>, profile: UserProfile) {
+        val isStudent = profile.role == UserRole.STUDENT
+
+        if (isStudent) {
+            // Студент видит ТОЛЬКО свою группу.
+            // Поиск: сначала по groupId (UUID из 1С), потом по имени (для совместимости со старыми данными).
+            val studentGroup = when {
+                profile.groupId.isNotBlank() ->
+                    allGroups.find { it.id == profile.groupId }
+                        ?: allGroups.find { it.name.equals(profile.groupName, ignoreCase = true) }
+                profile.groupName.isNotBlank() ->
+                    allGroups.find { it.name.equals(profile.groupName, ignoreCase = true) }
+                else -> allGroups.firstOrNull()
+            } ?: StudentGroup(
+                id = profile.groupId.ifBlank { profile.groupName },
+                name = profile.groupName.ifBlank { allGroups.firstOrNull()?.name ?: "Группа" },
+                course = 1,
+                department = profile.department.ifBlank { "Студенческое отделение" }
+            )
+
+            _uiState.update {
+                it.copy(
+                    groups = listOf(studentGroup),
+                    selectedGroup = studentGroup,
+                    canChangeGroup = false,
+                    currentUserRole = UserRole.STUDENT,
+                    assignedGroupName = studentGroup.name
+                )
+            }
+        } else {
+            // Преподаватель или Администратор — видят все группы из базы данных
+            _uiState.update {
+                it.copy(
+                    groups = allGroups,
+                    selectedGroup = when {
+                        profile.groupId.isNotBlank() ->
+                            allGroups.find { it.id == profile.groupId }
+                                ?: allGroups.find { it.name.equals(profile.groupName, ignoreCase = true) }
+                                ?: it.selectedGroup ?: allGroups.firstOrNull()
+                        profile.groupName.isNotBlank() ->
+                            allGroups.find { it.name.equals(profile.groupName, ignoreCase = true) }
+                                ?: it.selectedGroup ?: allGroups.firstOrNull()
+                        else -> it.selectedGroup ?: allGroups.firstOrNull()
+                    },
+                    canChangeGroup = true,
+                    currentUserRole = profile.role,
+                    assignedGroupName = profile.groupName
+                )
+            }
         }
     }
 
@@ -141,6 +225,7 @@ class ScheduleViewModel(
         }
 
         viewModelScope.launch {
+            // Используем id группы из 1С (UUID) для точного запроса расписания
             val groupId = currentSelectedGroup?.id ?: ""
             val scheduleResult = repository.getSchedule(groupId, currentWeekType)
             val isDemoMode = settingsManager.getConfig().isDemoMode
@@ -151,6 +236,13 @@ class ScheduleViewModel(
 
                 if (scheduleResult.isSuccess) {
                     val days = scheduleResult.getOrNull().orEmpty()
+
+                    // Проверка уведомлений о заменах
+                    val notificationSettings = NotificationSettingsManager(appContext)
+                    if (notificationSettings.isReplacementsEnabled && days.any { it.hasReplacements }) {
+                        NotificationHelper.sendReplacementNotification(appContext)
+                    }
+
                     state.copy(
                         weekSchedule = days,
                         isRefreshing = false,

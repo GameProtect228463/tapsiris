@@ -1,5 +1,7 @@
 package com.TJPK.tapsiris.data.mock
 
+import com.TJPK.tapsiris.data.local.UserProfile
+import com.TJPK.tapsiris.data.local.UserRole
 import com.TJPK.tapsiris.domain.model.BellTime
 import com.TJPK.tapsiris.domain.model.DaySchedule
 import com.TJPK.tapsiris.domain.model.Lesson
@@ -12,6 +14,7 @@ import com.TJPK.tapsiris.domain.model.WeekType
  * СЛОЙ DATA / MOCK: Автономные демонстрационные данные и резервный кэш.
  * Используются для предпросмотра (Compose Preview), тестирования и офлайн-режима,
  * когда сервер 1С в колледже выключен или недоступен из внешней сети.
+ * Включает базу учетных записей (Студент, Преподаватель, Администратор).
  * =========================================================================================
  */
 object MockScheduleData {
@@ -32,6 +35,89 @@ object MockScheduleData {
         BellTime(4, "14:05", "15:35", 10),
         BellTime(5, "15:45", "17:15", 10)
     )
+
+    /**
+     * База аккаунтов колледжа (3 вида: Студент, Преподаватель, Администратор)
+     */
+    val mockAccounts = listOf(
+        // Студенты
+        UserProfile(
+            fullName = "Ахметов Асан Әлиұлы",
+            login = "student",
+            role = UserRole.STUDENT,
+            groupName = "ИС-21",
+            department = "Информационные системы"
+        ),
+        UserProfile(
+            fullName = "Иванов Иван Иванович",
+            login = "ivanov",
+            role = UserRole.STUDENT,
+            groupName = "П-22",
+            department = "Программная инженерия"
+        ),
+        // Преподаватели
+        UserProfile(
+            fullName = "Калиев Азамат Серикович",
+            login = "teacher",
+            role = UserRole.TEACHER,
+            groupName = "Куратор ИС-21",
+            department = "Кафедра программной инженерии"
+        ),
+        UserProfile(
+            fullName = "Сергеева Мария Владимировна",
+            login = "sergeeva",
+            role = UserRole.TEACHER,
+            groupName = "Куратор ВТ-11",
+            department = "Кафедра вычислительной техники"
+        ),
+        // Администраторы
+        UserProfile(
+            fullName = "Жумагулов Бахыт Касымович",
+            login = "admin",
+            role = UserRole.ADMINISTRATOR,
+            groupName = "Администрация",
+            department = "Учебная часть и диспетчерская 1С"
+        )
+    )
+
+    /**
+     * Поиск аккаунта в локальной базе 1С.
+     */
+    fun authenticateMock(login: String, role: UserRole): UserProfile? {
+        val normalized = login.trim().lowercase()
+        return mockAccounts.find { it.login.lowercase() == normalized && it.role == role }
+    }
+
+    /**
+     * Создание типового профиля для произвольного логина в демо-режиме 1С.
+     */
+    fun createDefaultProfileForRole(login: String, role: UserRole, group: String = "ИС-21"): UserProfile {
+        val cleanLogin = login.trim()
+        val capitalized = cleanLogin.replaceFirstChar { it.uppercase() }
+        return when (role) {
+            UserRole.STUDENT -> UserProfile(
+                fullName = "Студент $capitalized",
+                login = cleanLogin,
+                role = UserRole.STUDENT,
+                groupName = group,
+                department = "Отделение информационных систем"
+            )
+            UserRole.TEACHER -> UserProfile(
+                fullName = "Преподаватель $capitalized",
+                login = cleanLogin,
+                role = UserRole.TEACHER,
+                groupName = "Куратор $group",
+                department = "Кафедра информационных технологий"
+            )
+            UserRole.ADMINISTRATOR -> UserProfile(
+                fullName = "Администратор ($cleanLogin)",
+                login = cleanLogin,
+                role = UserRole.ADMINISTRATOR,
+                groupName = "Администрация колледжа",
+                department = "Учебная часть и диспетчерская 1С"
+            )
+        }
+    }
 
     fun getWeekSchedule(weekType: WeekType): List<DaySchedule> {
         return listOf(

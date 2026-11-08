@@ -120,4 +120,57 @@
     <string name="action_bells">Расписание звонков</string>
     <string name="action_settings">Настройки</string>
     <string name="action_select_group">Выбрать группу</string>
+
+    <!-- Theme Selection -->
+    <string name="app_theme">Тема оформления</string>
+    <string name="theme_select_title">Тема оформления</string>
+    <string name="theme_mode_title">Режим темы</string>
+    <string name="theme_palette_title">Цветовая палитра</string>
+    <string name="theme_system">Системная (по умолчанию)</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="palette_default">Классическая (Indigo)</string>
+    <string name="palette_mint">Изумрудная мята (Mint)</string>
+    <string name="palette_pine">Лесная хвоя (Pine)</string>
+    <string name="palette_ocean">Океанический циан (Cyan)</string>
+    <string name="theme_changed">Тема оформления обновлена</string>
+
+    <!-- Notifications -->
+    <string name="notifications_section">Уведомления</string>
+    <string name="notifications_enable">Напоминать о парах</string>
+    <string name="notifications_enable_desc">Уведомление за 15 минут до начала занятия</string>
+    <string name="notifications_replacements">Уведомлять о заменах</string>
+    <string name="notifications_replacements_desc">Оповещать об изменениях в расписании</string>
+    <string name="notifications_send_test">Отправить тестовое уведомление</string>
+    <string name="notifications_send_test_desc">Проверить работу уведомлений</string>
+    <string name="notifications_test_sent">Тестовое уведомление отправлено!</string>
+    <string name="notifications_permission_required">Необходимо предоставить разрешение на уведомления</string>
+    <string name="notifications_permission_granted">Разрешение на уведомления предоставлено</string>
+    <string name="notification_channel_name">Расписание и пары</string>
+    <string name="notification_channel_desc">Уведомления о начале пар и заменах в расписании</string>
+    <string name="notification_test_title">Тапсырыс: Уведомления работают</string>
+    <string name="notification_test_body">Напоминания о парах и заменах настроены успешно!</string>
+    <string name="notification_lesson_reminder_title">Скоро пара: %1$s</string>
+    <string name="notification_lesson_reminder_body">Через %1$d мин в каб. %2$s • %3$s</string>
+    <string name="notification_replacement_title">Замена в расписании</string>
+    <string name="notification_replacement_body">В расписании вашей группы произошли изменения</string>
+
+    <!-- User Roles (1C Base) -->
+    <string name="role_student">Студент</string>
+    <string name="role_teacher">Преподаватель</string>
+    <string name="role_admin">Администратор</string>
+    <string name="select_role">Тип аккаунта</string>
+    <string name="select_role_subtitle">Выберите вашу роль в колледже</string>
+    <string name="auth_verifying_1c">Авторизация в базе 1С…</string>
+    <string name="auth_source_1c">База 1С:Колледж</string>
+    <string name="department_label">Отделение / Кафедра</string>
+    <string name="quick_demo_login">Быстрый тестовый вход (1С)</string>
+    <string name="demo_student">Студент (student)</string>
+    <string name="demo_teacher">Преподаватель (teacher)</string>
+    <string name="demo_admin">Администратор (admin)</string>
+
+    <!-- Student Group Locking & Database -->
+    <string name="my_group">Моя группа</string>
+    <string name="student_group_locked">Студенты просматривают расписание только своей группы</string>
+    <string name="groups_loaded_from_db">Группы загружены из базы данных</string>
 </resources>

@@ -23,7 +23,7 @@ class OneCSettingsManager(context: Context) {
             serverUrl = prefs.getString(KEY_SERVER_URL, DEFAULT_URL) ?: DEFAULT_URL,
             username1C = prefs.getString(KEY_USERNAME, DEFAULT_USER) ?: DEFAULT_USER,
             password1C = prefs.getString(KEY_PASSWORD, DEFAULT_PASS) ?: DEFAULT_PASS,
-            isDemoMode = prefs.getBoolean(KEY_DEMO_MODE, true)
+            isDemoMode = prefs.getBoolean(KEY_DEMO_MODE, false)
         )
     }
 
@@ -46,7 +46,7 @@ class OneCSettingsManager(context: Context) {
         private const val KEY_PASSWORD = "password_1c"
         private const val KEY_DEMO_MODE = "is_demo_mode"
 
-        private const val DEFAULT_URL = "http://192.168.1.50/college_base/hs/schedule"
+        private const val DEFAULT_URL = "http://192.168.0.103/Tapiris/hs/Tapsiris"
         private const val DEFAULT_USER = "api_user"
         private const val DEFAULT_PASS = "123456"
     }

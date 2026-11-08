@@ -120,4 +120,56 @@
     <string name="action_bells">Қоңырау кестесі</string>
     <string name="action_settings">Параметрлер</string>
     <string name="action_select_group">Топты таңдау</string>
+    <!-- Theme Selection -->
+    <string name="app_theme">Қолданба тақырыбы</string>
+    <string name="theme_select_title">Безендіру тақырыбы</string>
+    <string name="theme_mode_title">Тақырып режимі</string>
+    <string name="theme_palette_title">Түстер палитрасы</string>
+    <string name="theme_system">Жүйелік (әдепкі)</string>
+    <string name="theme_light">Ашық</string>
+    <string name="theme_dark">Күңгірт</string>
+    <string name="palette_default">Классикалық (Indigo)</string>
+    <string name="palette_mint">Жалбызды (Mint)</string>
+    <string name="palette_pine">Қарағай орманы (Pine)</string>
+    <string name="palette_ocean">Мұхит көк (Cyan)</string>
+    <string name="theme_changed">Қолданба тақырыбы өзгертілді</string>
+
+    <!-- Notifications -->
+    <string name="notifications_section">Хабарламалар</string>
+    <string name="notifications_enable">Сабақтар туралы еске салу</string>
+    <string name="notifications_enable_desc">Сабақ басталуға 15 минут қалғанда хабарлама</string>
+    <string name="notifications_replacements">Ауыстырулар туралы хабарлау</string>
+    <string name="notifications_replacements_desc">Кестедегі өзгерістер туралы хабарлау</string>
+    <string name="notifications_send_test">Тест хабарламасын жіберу</string>
+    <string name="notifications_send_test_desc">Хабарламалар жұмысын тексеру</string>
+    <string name="notifications_test_sent">Тест хабарламасы жіберілді!</string>
+    <string name="notifications_permission_required">Хабарламалар үшін рұқсат қажет</string>
+    <string name="notifications_permission_granted">Хабарламаларға рұқсат берілді</string>
+    <string name="notification_channel_name">Кесте және сабақтар</string>
+    <string name="notification_channel_desc">Сабақтар мен ауыстырулар туралы хабарламалар</string>
+    <string name="notification_test_title">Тапсырыс: Хабарламалар жұмыс істейді</string>
+    <string name="notification_test_body">Сабақтар мен ауыстырулар туралы еске салғыштар сәтті бапталды!</string>
+    <string name="notification_lesson_reminder_title">Жақында сабақ: %1$s</string>
+    <string name="notification_lesson_reminder_body">%1$d минуттан кейін, %2$s каб. • %3$s</string>
+    <string name="notification_replacement_title">Кестедегі ауыстыру</string>
+    <string name="notification_replacement_body">Тобыңыздың кестесінде өзгерістер орын алды</string>
+
+    <!-- User Roles (1C Base) -->
+    <string name="role_student">Студент</string>
+    <string name="role_teacher">Оқытушы</string>
+    <string name="role_admin">Әкімші</string>
+    <string name="select_role">Тіркелгі түрі</string>
+    <string name="select_role_subtitle">Колледждегі рөліңізді таңдаңыз</string>
+    <string name="auth_verifying_1c">1С базасында тексерілуде…</string>
+    <string name="auth_source_1c">1С:Колледж базасы</string>
+    <string name="department_label">Бөлім / Кафедра</string>
+    <string name="quick_demo_login">Сынақ үшін жылдам кіру (1С)</string>
+    <string name="demo_student">Студент (student)</string>
+    <string name="demo_teacher">Оқытушы (teacher)</string>
+    <string name="demo_admin">Әкімші (admin)</string>
+
+    <!-- Student Group Locking & Database -->
+    <string name="my_group">Менің тобым</string>
+    <string name="student_group_locked">Студенттер тек өз тобының кестесін көре алады</string>
+    <string name="groups_loaded_from_db">Топтар дерекқордан жүктелді</string>
 </resources>

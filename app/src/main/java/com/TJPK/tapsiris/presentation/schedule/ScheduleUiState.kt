@@ -1,5 +1,7 @@
 package com.TJPK.tapsiris.presentation.schedule
 
+import com.TJPK.tapsiris.data.local.UserProfile
+import com.TJPK.tapsiris.data.local.UserRole
 import com.TJPK.tapsiris.data.remote.ServerConfig
 import com.TJPK.tapsiris.domain.model.BellTime
 import com.TJPK.tapsiris.domain.model.DaySchedule
@@ -28,11 +30,15 @@ sealed interface ScheduleLoadState {
 /**
  * =========================================================================================
  * СЛОЙ PRESENTATION: Состояние экрана расписания (UI State).
+ * Поддерживает ограничение просмотра для студентов (видят только свою группу).
  * =========================================================================================
  */
 data class ScheduleUiState(
     val groups: List<StudentGroup> = emptyList(),
     val selectedGroup: StudentGroup? = null,
+    val canChangeGroup: Boolean = true,
+    val currentUserRole: UserRole = UserRole.STUDENT,
+    val assignedGroupName: String = "",
     val weekType: WeekType = WeekType.ODD,
     val selectedDayIndex: Int = 2,
     val weekSchedule: List<DaySchedule> = emptyList(),
@@ -73,5 +79,6 @@ sealed interface ScheduleUiEvent {
     data class ToggleSearch(val active: Boolean) : ScheduleUiEvent
     object Refresh : ScheduleUiEvent
     data class UpdateServerConfig(val newConfig: ServerConfig) : ScheduleUiEvent
+    data class UpdateUserContext(val profile: UserProfile) : ScheduleUiEvent
     object DismissMessage : ScheduleUiEvent
 }

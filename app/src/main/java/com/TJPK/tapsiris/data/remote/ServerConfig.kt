@@ -11,8 +11,8 @@ package com.TJPK.tapsiris.data.remote
  * @property isDemoMode Режим отказоустойчивости: если сервер 1С недоступен, использовать встроенный офлайн-кэш
  */
 data class ServerConfig(
-    val serverUrl: String = "http://192.168.1.50/college_base/hs/schedule",
+    val serverUrl: String = "http://192.168.0.103/Tapiris/hs/Tapsiris",
     val username1C: String = "api_user",
     val password1C: String = "123456",
-    val isDemoMode: Boolean = true
+    val isDemoMode: Boolean = false
 )
