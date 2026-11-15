@@ -144,9 +144,12 @@ class OneCApiClient(private val config: ServerConfig) {
                 val code = conn.responseCode
                 if (code in 200..299) {
                     val responseText = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    android.util.Log.d("1C_GROUPS", "1C response ($endpoint) code $code: $responseText")
                     val groups = parseGroupsJson(responseText)
                     if (groups.isNotEmpty()) {
                         return@withContext Result.success(groups)
+                    } else {
+                        android.util.Log.w("1C_GROUPS", "1C вернул код $code, но массив групп пустой [] или поля не распознаны!")
                     }
                 } else if (code == 404) {
                     lastErr = "Код 404 ($endpoint не найден в 1С)"
@@ -227,6 +230,195 @@ class OneCApiClient(private val config: ServerConfig) {
         Result.failure(Exception("Не удалось получить звонки из 1С: $lastErr"))
     }
 
+    /**
+     * Отправка произвольного POST-запроса в 1С с поддержкой альтернативных путей (/path и /Path).
+     */
+    private suspend fun postJson(endpoints: List<String>, payload: JSONObject): Result<String> =
+        withContext(Dispatchers.IO) {
+            var lastErr = ""
+            for (endpoint in endpoints) {
+                try {
+                    val conn = createConnection(endpoint)
+                    conn.requestMethod = "POST"
+                    conn.doOutput = true
+                    conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+
+                    conn.outputStream.bufferedWriter(Charsets.UTF_8).use {
+                        it.write(payload.toString())
+                    }
+
+                    val code = conn.responseCode
+                    if (code in 200..299) {
+                        val resp = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                        return@withContext Result.success(resp.ifBlank { "OK" })
+                    } else if (code == 404) {
+                        lastErr = "Код 404 ($endpoint не найден)"
+                        continue
+                    } else {
+                        val err = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
+                        return@withContext Result.failure(Exception("1С вернул код $code: $err"))
+                    }
+                } catch (e: Exception) {
+                    lastErr = e.localizedMessage ?: e.toString()
+                }
+            }
+            Result.failure(Exception("Не удалось отправить данные в 1С: $lastErr"))
+        }
+
+    /**
+     * Создание или обновление группы в 1С (Администратор).
+     */
+    suspend fun saveGroup(group: StudentGroup): Result<String> {
+        val trimmedUrl = config.serverUrl.trimEnd('/')
+        val endpoints = listOf("$trimmedUrl/groups", "$trimmedUrl/Groups", "$trimmedUrl/groups/save")
+        val payload = JSONObject().apply {
+            put("id", group.id)
+            put("name", group.name)
+            put("course", group.course)
+            put("department", group.department)
+        }
+        return postJson(endpoints, payload)
+    }
+
+    /**
+     * Удаление группы из 1С (Администратор).
+     */
+    suspend fun deleteGroup(groupId: String): Result<String> {
+        val trimmedUrl = config.serverUrl.trimEnd('/')
+        val endpoints = listOf("$trimmedUrl/groups/delete", "$trimmedUrl/Groups/Delete")
+        val payload = JSONObject().apply {
+            put("id", groupId)
+            put("groupId", groupId)
+        }
+        return postJson(endpoints, payload)
+    }
+
+    /**
+     * Сохранение / добавление / изменение занятия в расписании 1С (Администратор).
+     */
+    suspend fun saveLesson(
+        groupId: String,
+        weekType: WeekType,
+        dayIndex: Int,
+        lesson: Lesson
+    ): Result<String> {
+        val trimmedUrl = config.serverUrl.trimEnd('/')
+        val endpoints = listOf("$trimmedUrl/schedule/lesson", "$trimmedUrl/Schedule/Lesson")
+        val lessonObj = JSONObject().apply {
+            put("id", lesson.id)
+            put("number", lesson.number)
+            put("timeStart", lesson.timeStart)
+            put("timeEnd", lesson.timeEnd)
+            put("subject", lesson.subject)
+            put("teacher", lesson.teacher)
+            put("room", lesson.room)
+            put("type", lesson.type.name)
+            put("isCanceled", lesson.isCanceled)
+            put("replacementInfo", lesson.replacementInfo ?: "")
+            put("delayNotice", lesson.delayNotice ?: "")
+            put("delayMinutes", lesson.delayMinutes)
+        }
+        val payload = JSONObject().apply {
+            put("groupId", groupId)
+            put("weekType", if (weekType == WeekType.ODD) "odd" else "even")
+            put("dayIndex", dayIndex)
+            put("lesson", lessonObj)
+        }
+        return postJson(endpoints, payload)
+    }
+
+    /**
+     * Удаление занятия из расписания 1С (Администратор).
+     */
+    suspend fun deleteLesson(
+        groupId: String,
+        weekType: WeekType,
+        dayIndex: Int,
+        lessonId: String
+    ): Result<String> {
+        val trimmedUrl = config.serverUrl.trimEnd('/')
+        val endpoints = listOf("$trimmedUrl/schedule/delete-lesson", "$trimmedUrl/Schedule/DeleteLesson")
+        val payload = JSONObject().apply {
+            put("groupId", groupId)
+            put("weekType", if (weekType == WeekType.ODD) "odd" else "even")
+            put("dayIndex", dayIndex)
+            put("lessonId", lessonId)
+        }
+        return postJson(endpoints, payload)
+    }
+
+    /**
+     * Смена аудитории / кабинета пары (Преподаватель или Администратор).
+     */
+    suspend fun changeRoom(
+        groupId: String,
+        weekType: WeekType,
+        dayIndex: Int,
+        lessonId: String,
+        newRoom: String
+    ): Result<String> {
+        val trimmedUrl = config.serverUrl.trimEnd('/')
+        val endpoints = listOf("$trimmedUrl/schedule/change-room", "$trimmedUrl/Schedule/ChangeRoom")
+        val payload = JSONObject().apply {
+            put("groupId", groupId)
+            put("weekType", if (weekType == WeekType.ODD) "odd" else "even")
+            put("dayIndex", dayIndex)
+            put("lessonId", lessonId)
+            put("room", newRoom)
+        }
+        return postJson(endpoints, payload)
+    }
+
+    /**
+     * Назначение замены пары (Преподаватель или Администратор).
+     */
+    suspend fun setReplacement(
+        groupId: String,
+        weekType: WeekType,
+        dayIndex: Int,
+        lessonId: String,
+        replacementInfo: String,
+        newTeacher: String? = null,
+        newSubject: String? = null
+    ): Result<String> {
+        val trimmedUrl = config.serverUrl.trimEnd('/')
+        val endpoints = listOf("$trimmedUrl/schedule/replacement", "$trimmedUrl/Schedule/Replacement")
+        val payload = JSONObject().apply {
+            put("groupId", groupId)
+            put("weekType", if (weekType == WeekType.ODD) "odd" else "even")
+            put("dayIndex", dayIndex)
+            put("lessonId", lessonId)
+            put("replacementInfo", replacementInfo)
+            if (!newTeacher.isNullOrBlank()) put("teacher", newTeacher)
+            if (!newSubject.isNullOrBlank()) put("subject", newSubject)
+        }
+        return postJson(endpoints, payload)
+    }
+
+    /**
+     * Предупреждение о задержке пары (Преподаватель).
+     */
+    suspend fun notifyDelay(
+        groupId: String,
+        weekType: WeekType,
+        dayIndex: Int,
+        lessonId: String,
+        delayMinutes: Int,
+        delayNotice: String
+    ): Result<String> {
+        val trimmedUrl = config.serverUrl.trimEnd('/')
+        val endpoints = listOf("$trimmedUrl/schedule/delay-notice", "$trimmedUrl/Schedule/DelayNotice")
+        val payload = JSONObject().apply {
+            put("groupId", groupId)
+            put("weekType", if (weekType == WeekType.ODD) "odd" else "even")
+            put("dayIndex", dayIndex)
+            put("lessonId", lessonId)
+            put("delayMinutes", delayMinutes)
+            put("delayNotice", delayNotice)
+        }
+        return postJson(endpoints, payload)
+    }
+
     private fun parseGroupsJson(jsonStr: String): List<StudentGroup> {
         val list = mutableListOf<StudentGroup>()
         val trimmed = jsonStr.trim()
@@ -305,6 +497,8 @@ class OneCApiClient(private val config: ServerConfig) {
                 }
 
                 val replacement = lObj.optString("replacementInfo", lObj.optString("replacement", ""))
+                val delay = lObj.optString("delayNotice", lObj.optString("delay", lObj.optString("Задержка", "")))
+                val delayMins = lObj.optInt("delayMinutes", lObj.optInt("минутЗадержки", 0))
 
                 lessons.add(
                     Lesson(
@@ -318,7 +512,9 @@ class OneCApiClient(private val config: ServerConfig) {
                         type = lessonType,
                         isCurrent = lObj.optBoolean("isCurrent", false),
                         isCanceled = lObj.optBoolean("isCanceled", false),
-                        replacementInfo = if (replacement.isNotBlank()) replacement else null
+                        replacementInfo = if (replacement.isNotBlank()) replacement else null,
+                        delayNotice = if (delay.isNotBlank()) delay else null,
+                        delayMinutes = delayMins
                     )
                 )
             }

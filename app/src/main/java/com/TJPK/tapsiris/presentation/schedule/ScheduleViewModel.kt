@@ -48,8 +48,7 @@ class ScheduleViewModel(
     fun onEvent(event: ScheduleUiEvent) {
         when (event) {
             is ScheduleUiEvent.SelectGroup -> {
-                // Если студент — переключение на чужие группы заблокировано
-                if (!_uiState.value.canChangeGroup || _uiState.value.currentUserRole == UserRole.STUDENT) return
+                if (!_uiState.value.canChangeGroup) return
                 _uiState.update { it.copy(selectedGroup = event.group) }
                 loadSchedule()
             }
@@ -95,6 +94,112 @@ class ScheduleViewModel(
             }
             ScheduleUiEvent.DismissMessage -> {
                 _uiState.update { it.copy(userMessage = null) }
+            }
+
+            // ─── Обработка действий Администратора ────────────────────────────
+            is ScheduleUiEvent.CreateGroup -> {
+                viewModelScope.launch {
+                    val result = repository.createGroup(event.group)
+                    if (result.isSuccess) {
+                        _uiState.update { it.copy(userMessage = appContext.getString(R.string.admin_group_created)) }
+                        val freshGroups = repository.getGroups().getOrNull().orEmpty()
+                        applyGroupsForProfile(freshGroups, userManager.getUserProfile())
+                        loadSchedule()
+                    } else {
+                        _uiState.update { it.copy(userMessage = result.exceptionOrNull()?.localizedMessage) }
+                    }
+                }
+            }
+            is ScheduleUiEvent.DeleteGroup -> {
+                viewModelScope.launch {
+                    val result = repository.deleteGroup(event.groupId)
+                    if (result.isSuccess) {
+                        _uiState.update { it.copy(userMessage = appContext.getString(R.string.admin_group_deleted)) }
+                        val freshGroups = repository.getGroups().getOrNull().orEmpty()
+                        applyGroupsForProfile(freshGroups, userManager.getUserProfile())
+                        loadSchedule()
+                    } else {
+                        _uiState.update { it.copy(userMessage = result.exceptionOrNull()?.localizedMessage) }
+                    }
+                }
+            }
+            is ScheduleUiEvent.SaveLesson -> {
+                val currentGroup = _uiState.value.selectedGroup ?: return
+                val weekType = _uiState.value.weekType
+                val dayIndex = _uiState.value.selectedDayIndex + 1
+                viewModelScope.launch {
+                    val result = repository.saveLesson(currentGroup.id, weekType, dayIndex, event.lesson)
+                    if (result.isSuccess) {
+                        _uiState.update { it.copy(userMessage = appContext.getString(R.string.admin_action_saved)) }
+                        loadSchedule()
+                    } else {
+                        _uiState.update { it.copy(userMessage = result.exceptionOrNull()?.localizedMessage) }
+                    }
+                }
+            }
+            is ScheduleUiEvent.DeleteLesson -> {
+                val currentGroup = _uiState.value.selectedGroup ?: return
+                val weekType = _uiState.value.weekType
+                val dayIndex = _uiState.value.selectedDayIndex + 1
+                viewModelScope.launch {
+                    val result = repository.deleteLesson(currentGroup.id, weekType, dayIndex, event.lessonId)
+                    if (result.isSuccess) {
+                        _uiState.update { it.copy(userMessage = appContext.getString(R.string.admin_lesson_deleted)) }
+                        loadSchedule()
+                    } else {
+                        _uiState.update { it.copy(userMessage = result.exceptionOrNull()?.localizedMessage) }
+                    }
+                }
+            }
+
+            // ─── Обработка действий Преподавателя ─────────────────────────────
+            is ScheduleUiEvent.ChangeRoom -> {
+                val currentGroup = _uiState.value.selectedGroup ?: return
+                val weekType = _uiState.value.weekType
+                val dayIndex = _uiState.value.selectedDayIndex + 1
+                viewModelScope.launch {
+                    val result = repository.changeRoom(currentGroup.id, weekType, dayIndex, event.lessonId, event.newRoom)
+                    if (result.isSuccess) {
+                        _uiState.update { it.copy(userMessage = appContext.getString(R.string.admin_action_saved)) }
+                        loadSchedule()
+                    } else {
+                        _uiState.update { it.copy(userMessage = result.exceptionOrNull()?.localizedMessage) }
+                    }
+                }
+            }
+            is ScheduleUiEvent.SetReplacement -> {
+                val currentGroup = _uiState.value.selectedGroup ?: return
+                val weekType = _uiState.value.weekType
+                val dayIndex = _uiState.value.selectedDayIndex + 1
+                viewModelScope.launch {
+                    val result = repository.setReplacement(
+                        currentGroup.id, weekType, dayIndex, event.lessonId,
+                        event.replacementInfo, event.newTeacher, event.newSubject
+                    )
+                    if (result.isSuccess) {
+                        _uiState.update { it.copy(userMessage = appContext.getString(R.string.admin_action_saved)) }
+                        loadSchedule()
+                    } else {
+                        _uiState.update { it.copy(userMessage = result.exceptionOrNull()?.localizedMessage) }
+                    }
+                }
+            }
+            is ScheduleUiEvent.NotifyDelay -> {
+                val currentGroup = _uiState.value.selectedGroup ?: return
+                val weekType = _uiState.value.weekType
+                val dayIndex = _uiState.value.selectedDayIndex + 1
+                viewModelScope.launch {
+                    val result = repository.notifyDelay(
+                        currentGroup.id, weekType, dayIndex, event.lessonId,
+                        event.delayMinutes, event.delayNotice
+                    )
+                    if (result.isSuccess) {
+                        _uiState.update { it.copy(userMessage = appContext.getString(R.string.admin_action_saved)) }
+                        loadSchedule()
+                    } else {
+                        _uiState.update { it.copy(userMessage = result.exceptionOrNull()?.localizedMessage) }
+                    }
+                }
             }
         }
     }
@@ -142,11 +247,10 @@ class ScheduleViewModel(
     }
 
     private fun applyGroupsForProfile(allGroups: List<StudentGroup>, profile: UserProfile) {
-        val isStudent = profile.role == UserRole.STUDENT
+        val isStudent = profile.role == UserRole.STUDENT && !profile.isGuest
 
-        if (isStudent) {
-            // Студент видит ТОЛЬКО свою группу.
-            // Поиск: сначала по groupId (UUID из 1С), потом по имени (для совместимости со старыми данными).
+        if (isStudent && profile.groupName.isNotBlank()) {
+            // Зарегистрированный студент видит расписание своей группы
             val studentGroup = when {
                 profile.groupId.isNotBlank() ->
                     allGroups.find { it.id == profile.groupId }
@@ -163,7 +267,7 @@ class ScheduleViewModel(
 
             _uiState.update {
                 it.copy(
-                    groups = listOf(studentGroup),
+                    groups = if (allGroups.isNotEmpty()) allGroups else listOf(studentGroup),
                     selectedGroup = studentGroup,
                     canChangeGroup = false,
                     currentUserRole = UserRole.STUDENT,
@@ -171,17 +275,17 @@ class ScheduleViewModel(
                 )
             }
         } else {
-            // Преподаватель или Администратор — видят все группы из базы данных
+            // Гость, Преподаватель или Администратор — видят все группы из базы 1С
             _uiState.update {
                 it.copy(
                     groups = allGroups,
                     selectedGroup = when {
                         profile.groupId.isNotBlank() ->
-                            allGroups.find { it.id == profile.groupId }
-                                ?: allGroups.find { it.name.equals(profile.groupName, ignoreCase = true) }
+                            allGroups.find { g -> g.id == profile.groupId }
+                                ?: allGroups.find { g -> g.name.equals(profile.groupName, ignoreCase = true) }
                                 ?: it.selectedGroup ?: allGroups.firstOrNull()
                         profile.groupName.isNotBlank() ->
-                            allGroups.find { it.name.equals(profile.groupName, ignoreCase = true) }
+                            allGroups.find { g -> g.name.equals(profile.groupName, ignoreCase = true) }
                                 ?: it.selectedGroup ?: allGroups.firstOrNull()
                         else -> it.selectedGroup ?: allGroups.firstOrNull()
                     },

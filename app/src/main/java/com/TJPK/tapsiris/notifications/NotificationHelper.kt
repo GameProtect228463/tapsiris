@@ -24,6 +24,7 @@ object NotificationHelper {
     private const val NOTIFICATION_TEST_ID = 1001
     private const val NOTIFICATION_LESSON_ID = 1002
     private const val NOTIFICATION_REPLACEMENT_ID = 1003
+    private const val NOTIFICATION_DELAY_ID = 1004
 
     /**
      * Создает канал уведомлений для расписания на Android 8.0 (API 26) и выше.
@@ -149,6 +150,38 @@ object NotificationHelper {
 
         return try {
             NotificationManagerCompat.from(context).notify(NOTIFICATION_REPLACEMENT_ID, builder.build())
+            true
+        } catch (_: SecurityException) {
+            false
+        }
+    }
+
+    /**
+     * Отправляет оповещение о задержке пары преподавателем.
+     */
+    fun sendDelayNotification(
+        context: Context,
+        lessonName: String,
+        details: String
+    ): Boolean {
+        createNotificationChannels(context)
+        if (!hasNotificationPermission(context)) return false
+
+        val contentIntent = createContentIntent(context)
+        val title = context.getString(R.string.notification_delay_title)
+        val body = context.getString(R.string.notification_delay_body, lessonName, details)
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_SCHEDULE_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(contentIntent)
+            .setAutoCancel(true)
+
+        return try {
+            NotificationManagerCompat.from(context).notify(NOTIFICATION_DELAY_ID, builder.build())
             true
         } catch (_: SecurityException) {
             false

@@ -72,8 +72,8 @@
     <string name="search_schedule">Search subject, room, teacher…</string>
     <string name="search_schedule_empty">Nothing found</string>
     <string name="search_schedule_empty_hint">Try changing your search query</string>
-    <string name="no_lessons_today">No classes today!</string>
-    <string name="no_lessons_today_hint">A great day for rest or self-study 🎉</string>
+    <string name="no_lessons_today">No classes</string>
+    <string name="no_lessons_today_hint">No classes scheduled for this day</string>
     <string name="week_odd">Numerator</string>
     <string name="week_even">Denominator</string>
     <string name="status_1c_online">1C online • %1$s</string>
@@ -172,4 +172,45 @@
     <string name="my_group">My group</string>
     <string name="student_group_locked">Students can only view their own group\'s schedule</string>
     <string name="groups_loaded_from_db">Groups loaded from database</string>
+
+    <!-- Admin & Teacher 1C Synchronization -->
+    <string name="admin_panel_title">Control Panel</string>
+    <string name="admin_create_group">Create Group</string>
+    <string name="admin_add_lesson">Add Lesson</string>
+    <string name="admin_edit_lesson">Edit Lesson</string>
+    <string name="admin_delete_lesson">Delete Lesson</string>
+    <string name="admin_delete_group">Delete Group</string>
+    <string name="admin_confirm_delete_group">Delete group %1$s and sync with 1C?</string>
+    <string name="admin_confirm_delete_lesson">Delete this lesson from schedule?</string>
+    <string name="admin_group_code">Group Code / ID in 1C</string>
+    <string name="admin_group_name">Group Name (e.g. IS-21)</string>
+    <string name="admin_course">Course (1-4)</string>
+    <string name="admin_department">Department / Major</string>
+    <string name="admin_lesson_subject">Subject name</string>
+    <string name="admin_lesson_teacher">Teacher name</string>
+    <string name="admin_lesson_room">Classroom / Room</string>
+    <string name="admin_lesson_number">Lesson number (1-5)</string>
+    <string name="admin_lesson_time_start">Start (HH:mm)</string>
+    <string name="admin_lesson_time_end">End (HH:mm)</string>
+    <string name="admin_lesson_type">Lesson Type</string>
+    <string name="admin_action_saved">Saved and synced with 1C</string>
+    <string name="admin_group_created">Group created and synced with 1C</string>
+    <string name="admin_group_deleted">Group deleted from 1C</string>
+    <string name="admin_lesson_deleted">Lesson deleted from 1C</string>
+    <string name="teacher_manage_lesson">Manage Lesson</string>
+    <string name="teacher_change_room">Change Room</string>
+    <string name="teacher_set_replacement">Set Replacement</string>
+    <string name="teacher_notify_delay">Notify Delay</string>
+    <string name="teacher_delay_minutes">Delay minutes</string>
+    <string name="teacher_delay_comment">Reason / Comment (e.g. Meeting)</string>
+    <string name="teacher_delay_banner">Teacher is delayed by %1$d min (%2$s)</string>
+    <string name="teacher_delay_banner_short">Teacher is delayed by %1$d min</string>
+    <string name="teacher_clear_delay">Clear Delay</string>
+    <string name="teacher_replacement_info">Replacement details (reason, notes)</string>
+    <string name="teacher_replacement_substitute">Substitute teacher (if any)</string>
+    <string name="teacher_replacement_subject">New subject (if changed)</string>
+    <string name="save_and_sync_1c">Save and send to 1C</string>
+    <string name="delete_action">Delete</string>
+    <string name="notification_delay_title">Lesson Delay</string>
+    <string name="notification_delay_body">Lesson \"%1$s\": %2$s</string>
 </resources>

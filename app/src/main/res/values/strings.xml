@@ -72,8 +72,8 @@
     <string name="search_schedule">Поиск предмета, кабинета, учителя…</string>
     <string name="search_schedule_empty">Ничего не найдено</string>
     <string name="search_schedule_empty_hint">Попробуйте изменить поисковый запрос</string>
-    <string name="no_lessons_today">В этот день пар нет!</string>
-    <string name="no_lessons_today_hint">Отличный день для отдыха или самоподготовки 🎉</string>
+    <string name="no_lessons_today">Нет занятий</string>
+    <string name="no_lessons_today_hint">В этот день расписание свободно</string>
     <string name="week_odd">Числитель</string>
     <string name="week_even">Знаменатель</string>
     <string name="status_1c_online">1С онлайн • %1$s</string>
@@ -173,4 +173,45 @@
     <string name="my_group">Моя группа</string>
     <string name="student_group_locked">Студенты просматривают расписание только своей группы</string>
     <string name="groups_loaded_from_db">Группы загружены из базы данных</string>
+
+    <!-- Admin & Teacher 1C Synchronization -->
+    <string name="admin_panel_title">Панель управления</string>
+    <string name="admin_create_group">Создать группу</string>
+    <string name="admin_add_lesson">Добавить пару</string>
+    <string name="admin_edit_lesson">Редактировать пару</string>
+    <string name="admin_delete_lesson">Удалить пару</string>
+    <string name="admin_delete_group">Удалить группу</string>
+    <string name="admin_confirm_delete_group">Удалить группу %1$s и синхронизировать с 1С?</string>
+    <string name="admin_confirm_delete_lesson">Удалить эту пару из расписания?</string>
+    <string name="admin_group_code">Код / ID группы в 1С</string>
+    <string name="admin_group_name">Название группы (напр. ИС-21)</string>
+    <string name="admin_course">Курс (1-4)</string>
+    <string name="admin_department">Отделение / Специальность</string>
+    <string name="admin_lesson_subject">Название предмета</string>
+    <string name="admin_lesson_teacher">ФИО преподавателя</string>
+    <string name="admin_lesson_room">Кабинет / Аудитория</string>
+    <string name="admin_lesson_number">Номер пары (1-5)</string>
+    <string name="admin_lesson_time_start">Начало (HH:mm)</string>
+    <string name="admin_lesson_time_end">Окончание (HH:mm)</string>
+    <string name="admin_lesson_type">Тип занятия</string>
+    <string name="admin_action_saved">Сохранено и синхронизировано с 1С</string>
+    <string name="admin_group_created">Группа создана и синхронизирована с 1С</string>
+    <string name="admin_group_deleted">Группа удалена из 1С</string>
+    <string name="admin_lesson_deleted">Пара удалена из 1С</string>
+    <string name="teacher_manage_lesson">Управление парой</string>
+    <string name="teacher_change_room">Сменить кабинет</string>
+    <string name="teacher_set_replacement">Поставить замену</string>
+    <string name="teacher_notify_delay">Предупредить о задержке</string>
+    <string name="teacher_delay_minutes">Минут задержки</string>
+    <string name="teacher_delay_comment">Причина / Комментарий (напр. Совещание)</string>
+    <string name="teacher_delay_banner">Преподаватель задерживается на %1$d мин (%2$s)</string>
+    <string name="teacher_delay_banner_short">Преподаватель задерживается на %1$d мин</string>
+    <string name="teacher_clear_delay">Снять задержку</string>
+    <string name="teacher_replacement_info">Описание замены (причина, детали)</string>
+    <string name="teacher_replacement_substitute">Заменяющий преподаватель (если есть)</string>
+    <string name="teacher_replacement_subject">Новый предмет (если меняется)</string>
+    <string name="save_and_sync_1c">Сохранить и отправить в 1С</string>
+    <string name="delete_action">Удалить</string>
+    <string name="notification_delay_title">Задержка пары</string>
+    <string name="notification_delay_body">Пара «%1$s»: %2$s</string>
 </resources>

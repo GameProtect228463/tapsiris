@@ -12,7 +12,7 @@ package com.TJPK.tapsiris.data.remote
  */
 data class ServerConfig(
     val serverUrl: String = "http://192.168.0.103/Tapiris/hs/Tapsiris",
-    val username1C: String = "api_user",
-    val password1C: String = "123456",
+    val username1C: String = "admin",
+    val password1C: String = "12345",
     val isDemoMode: Boolean = false
 )

@@ -150,4 +150,13 @@ class ScheduleDatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
         return null
     }
+
+    /**
+     * Удалить группу из локальной базы данных.
+     */
+    fun deleteGroup(groupId: String): Boolean {
+        val db = writableDatabase
+        val deletedRows = db.delete(TABLE_GROUPS, "$COLUMN_ID = ?", arrayOf(groupId))
+        return deletedRows > 0
+    }
 }

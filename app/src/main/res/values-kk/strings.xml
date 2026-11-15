@@ -72,8 +72,8 @@
     <string name="search_schedule">Пән, кабинет, мұғалімді іздеу…</string>
     <string name="search_schedule_empty">Ештеңе табылмады</string>
     <string name="search_schedule_empty_hint">Іздеу сұрауын өзгертіп көріңіз</string>
-    <string name="no_lessons_today">Бұл күні сабақ жоқ!</string>
-    <string name="no_lessons_today_hint">Демалуға немесе өзіндік дайындыққа тамаша күн 🎉</string>
+    <string name="no_lessons_today">Сабақ жоқ</string>
+    <string name="no_lessons_today_hint">Бұл күні сабақ кестесі бос</string>
     <string name="week_odd">Алым</string>
     <string name="week_even">Бөлім</string>
     <string name="status_1c_online">1С онлайн • %1$s</string>
@@ -172,4 +172,45 @@
     <string name="my_group">Менің тобым</string>
     <string name="student_group_locked">Студенттер тек өз тобының кестесін көре алады</string>
     <string name="groups_loaded_from_db">Топтар дерекқордан жүктелді</string>
+
+    <!-- Admin & Teacher 1C Synchronization -->
+    <string name="admin_panel_title">Басқару тақтасы</string>
+    <string name="admin_create_group">Топ құру</string>
+    <string name="admin_add_lesson">Пара қосу</string>
+    <string name="admin_edit_lesson">Параны өзгерту</string>
+    <string name="admin_delete_lesson">Параны өшіру</string>
+    <string name="admin_delete_group">Топты өшіру</string>
+    <string name="admin_confirm_delete_group">%1$s тобын өшіріп, 1С-пен үндестіруді қалайсыз ба?</string>
+    <string name="admin_confirm_delete_lesson">Бұл сабақты кестеден өшіру керек пе?</string>
+    <string name="admin_group_code">1С-тегі топ коды / ID</string>
+    <string name="admin_group_name">Топ атауы (мыс. АЖ-21)</string>
+    <string name="admin_course">Курс (1-4)</string>
+    <string name="admin_department">Бөлім / Мамандық</string>
+    <string name="admin_lesson_subject">Пән атауы</string>
+    <string name="admin_lesson_teacher">Оқытушының аты-жөні</string>
+    <string name="admin_lesson_room">Кабинет / Аудитория</string>
+    <string name="admin_lesson_number">Пара нөмірі (1-5)</string>
+    <string name="admin_lesson_time_start">Басталуы (HH:mm)</string>
+    <string name="admin_lesson_time_end">Аяқталуы (HH:mm)</string>
+    <string name="admin_lesson_type">Сабақ түрі</string>
+    <string name="admin_action_saved">1С және жергілікті базаға сақталды</string>
+    <string name="admin_group_created">Топ құрылды және 1С-пен үндестірілді</string>
+    <string name="admin_group_deleted">Топ 1С-тен өшірілді</string>
+    <string name="admin_lesson_deleted">Пара 1С-тен өшірілді</string>
+    <string name="teacher_manage_lesson">Параны басқару</string>
+    <string name="teacher_change_room">Кабинетті ауыстыру</string>
+    <string name="teacher_set_replacement">Ауыстыру қою</string>
+    <string name="teacher_notify_delay">Кешігу туралы ескерту</string>
+    <string name="teacher_delay_minutes">Кешігу минуттары</string>
+    <string name="teacher_delay_comment">Себебі / Түсініктеме (мыс. Жиналыс)</string>
+    <string name="teacher_delay_banner">Оқытушы %1$d мин кешігеді (%2$s)</string>
+    <string name="teacher_delay_banner_short">Оқытушы %1$d мин кешігеді</string>
+    <string name="teacher_clear_delay">Кешігуді жою</string>
+    <string name="teacher_replacement_info">Ауыстыру сипаттамасы (себебі, мәліметтер)</string>
+    <string name="teacher_replacement_substitute">Ауыстыратын оқытушы (бар болса)</string>
+    <string name="teacher_replacement_subject">Жаңа пән (өзгерсе)</string>
+    <string name="save_and_sync_1c">Сақтау және 1С-ке жіберу</string>
+    <string name="delete_action">Өшіру</string>
+    <string name="notification_delay_title">Пара кешігуі</string>
+    <string name="notification_delay_body">«%1$s» парасы: %2$s</string>
 </resources>

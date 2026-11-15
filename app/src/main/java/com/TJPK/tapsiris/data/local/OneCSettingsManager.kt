@@ -47,7 +47,7 @@ class OneCSettingsManager(context: Context) {
         private const val KEY_DEMO_MODE = "is_demo_mode"
 
         private const val DEFAULT_URL = "http://192.168.0.103/Tapiris/hs/Tapsiris"
-        private const val DEFAULT_USER = "api_user"
-        private const val DEFAULT_PASS = "123456"
+        private const val DEFAULT_USER = "admin"
+        private const val DEFAULT_PASS = "12345"
     }
 }

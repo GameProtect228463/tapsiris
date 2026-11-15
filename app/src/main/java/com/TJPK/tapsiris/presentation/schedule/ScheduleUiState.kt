@@ -81,4 +81,24 @@ sealed interface ScheduleUiEvent {
     data class UpdateServerConfig(val newConfig: ServerConfig) : ScheduleUiEvent
     data class UpdateUserContext(val profile: UserProfile) : ScheduleUiEvent
     object DismissMessage : ScheduleUiEvent
+
+    // ─── События Администратора ──────────────────────────────────────────────
+    data class CreateGroup(val group: StudentGroup) : ScheduleUiEvent
+    data class DeleteGroup(val groupId: String) : ScheduleUiEvent
+    data class SaveLesson(val lesson: Lesson) : ScheduleUiEvent
+    data class DeleteLesson(val lessonId: String) : ScheduleUiEvent
+
+    // ─── События Преподавателя ───────────────────────────────────────────────
+    data class ChangeRoom(val lessonId: String, val newRoom: String) : ScheduleUiEvent
+    data class SetReplacement(
+        val lessonId: String,
+        val replacementInfo: String,
+        val newTeacher: String? = null,
+        val newSubject: String? = null
+    ) : ScheduleUiEvent
+    data class NotifyDelay(
+        val lessonId: String,
+        val delayMinutes: Int,
+        val delayNotice: String
+    ) : ScheduleUiEvent
 }

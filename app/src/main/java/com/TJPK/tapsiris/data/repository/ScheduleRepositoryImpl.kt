@@ -123,4 +123,106 @@ class ScheduleRepositoryImpl(
     override suspend fun pingServer(): Result<String> {
         return getClient().ping()
     }
+
+    override suspend fun createGroup(group: StudentGroup): Result<String> {
+        val config = settingsManager.getConfig()
+        // 1. Сохраняем в локальную базу данных SQLite
+        dbHelper.saveGroups(listOf(group), clearOld = false)
+
+        // 2. Отправляем в 1С
+        return if (!config.isDemoMode && config.serverUrl.isNotBlank()) {
+            getClient().saveGroup(group)
+        } else {
+            Result.success("Группа сохранена локально (Демо-режим)")
+        }
+    }
+
+    override suspend fun deleteGroup(groupId: String): Result<String> {
+        val config = settingsManager.getConfig()
+        // 1. Удаляем из локальной БД
+        dbHelper.deleteGroup(groupId)
+
+        // 2. Удаляем из 1С
+        return if (!config.isDemoMode && config.serverUrl.isNotBlank()) {
+            getClient().deleteGroup(groupId)
+        } else {
+            Result.success("Группа удалена локально")
+        }
+    }
+
+    override suspend fun saveLesson(
+        groupId: String,
+        weekType: WeekType,
+        dayIndex: Int,
+        lesson: com.TJPK.tapsiris.domain.model.Lesson
+    ): Result<String> {
+        val config = settingsManager.getConfig()
+        return if (!config.isDemoMode && config.serverUrl.isNotBlank()) {
+            getClient().saveLesson(groupId, weekType, dayIndex, lesson)
+        } else {
+            Result.success("Пара сохранена (Демо-режим)")
+        }
+    }
+
+    override suspend fun deleteLesson(
+        groupId: String,
+        weekType: WeekType,
+        dayIndex: Int,
+        lessonId: String
+    ): Result<String> {
+        val config = settingsManager.getConfig()
+        return if (!config.isDemoMode && config.serverUrl.isNotBlank()) {
+            getClient().deleteLesson(groupId, weekType, dayIndex, lessonId)
+        } else {
+            Result.success("Пара удалена (Демо-режим)")
+        }
+    }
+
+    override suspend fun changeRoom(
+        groupId: String,
+        weekType: WeekType,
+        dayIndex: Int,
+        lessonId: String,
+        newRoom: String
+    ): Result<String> {
+        val config = settingsManager.getConfig()
+        return if (!config.isDemoMode && config.serverUrl.isNotBlank()) {
+            getClient().changeRoom(groupId, weekType, dayIndex, lessonId, newRoom)
+        } else {
+            Result.success("Кабинет изменён на $newRoom")
+        }
+    }
+
+    override suspend fun setReplacement(
+        groupId: String,
+        weekType: WeekType,
+        dayIndex: Int,
+        lessonId: String,
+        replacementInfo: String,
+        newTeacher: String?,
+        newSubject: String?
+    ): Result<String> {
+        val config = settingsManager.getConfig()
+        return if (!config.isDemoMode && config.serverUrl.isNotBlank()) {
+            getClient().setReplacement(groupId, weekType, dayIndex, lessonId, replacementInfo, newTeacher, newSubject)
+        } else {
+            Result.success("Замена установлена: $replacementInfo")
+        }
+    }
+
+    override suspend fun notifyDelay(
+        groupId: String,
+        weekType: WeekType,
+        dayIndex: Int,
+        lessonId: String,
+        delayMinutes: Int,
+        delayNotice: String
+    ): Result<String> {
+        val config = settingsManager.getConfig()
+        return if (!config.isDemoMode && config.serverUrl.isNotBlank()) {
+            getClient().notifyDelay(groupId, weekType, dayIndex, lessonId, delayMinutes, delayNotice)
+        } else {
+            Result.success("Предупреждение о задержке на $delayMinutes мин отправлено")
+        }
+    }
 }

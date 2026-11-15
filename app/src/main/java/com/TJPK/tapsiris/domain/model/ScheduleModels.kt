@@ -43,7 +43,9 @@ data class Lesson(
     val type: LessonType,
     val isCurrent: Boolean = false,
     val isCanceled: Boolean = false,
-    val replacementInfo: String? = null
+    val replacementInfo: String? = null,
+    val delayNotice: String? = null,
+    val delayMinutes: Int = 0
 )
 
 /**
