@@ -76,6 +76,8 @@ class MainActivity : AppCompatActivity() {
         NotificationHelper.createNotificationChannels(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val syncEnabled = getSharedPreferences("tapsiris_sync", MODE_PRIVATE).getBoolean("enabled", true)
+        com.TJPK.tapsiris.sync.SyncScheduler.configure(this, syncEnabled)
 
         setContent {
             val themeMode by ThemeManager.themeModeState.collectAsState()

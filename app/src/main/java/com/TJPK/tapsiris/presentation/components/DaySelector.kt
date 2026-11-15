@@ -1,6 +1,7 @@
 package com.TJPK.tapsiris.presentation.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,15 +28,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.TJPK.tapsiris.R
 import com.TJPK.tapsiris.domain.model.DaySchedule
 
 /**
- * Горизонтальный селектор дней недели.
+ * Минималистичный и чистый селектор дней недели в нативном стиле.
  */
 @Composable
 fun DaySelector(
@@ -44,96 +43,125 @@ fun DaySelector(
     onDaySelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyRow(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        itemsIndexed(days) { index, day ->
-            val isSelected = index == selectedDayIndex
-            val bgColor by animateColorAsState(
-                targetValue = if (isSelected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                label = "bgColor"
-            )
-            val contentColor by animateColorAsState(
-                targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-                label = "contentColor"
-            )
-
-            Surface(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .clickable { onDaySelected(index) },
-                shape = RoundedCornerShape(16.dp),
-                color = bgColor,
-                tonalElevation = if (isSelected) 4.dp else 0.dp
-            ) {
-                Column(
-                    modifier = Modifier
-                        .width(58.dp)
-                        .padding(vertical = 10.dp, horizontal = 6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = day.dayShortName,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = contentColor
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    val dateOnly = day.dateText.split(" ").firstOrNull() ?: ""
-                    Text(
-                        text = dateOnly,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = contentColor
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Индикатор замены или пары
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.height(6.dp)
-                    ) {
-                        if (day.hasReplacements) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (isSelected) Color(0xFFFFD54F) else Color(0xFFFF9800)
-                                    )
-                            )
-                        } else if (day.lessons.isNotEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .size(5.dp)
-                                    .clip(CircleShape)
-                                    .background(contentColor.copy(alpha = 0.5f))
-                            )
-                        } else {
-                            Spacer(modifier = Modifier.size(5.dp))
-                        }
-                    }
-
-                    if (day.isToday) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = stringResource(R.string.today),
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+    if (days.size <= 6) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            days.forEachIndexed { index, day ->
+                DayItem(
+                    day = day,
+                    isSelected = index == selectedDayIndex,
+                    onClick = { onDaySelected(index) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    } else {
+        LazyRow(
+            modifier = modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            itemsIndexed(days) { index, day ->
+                DayItem(
+                    day = day,
+                    isSelected = index == selectedDayIndex,
+                    onClick = { onDaySelected(index) },
+                    modifier = Modifier.width(52.dp)
+                )
             }
         }
     }
+}
+
+@Composable
+private fun DayItem(
+    day: DaySchedule,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isToday = day.isToday
+    val primaryColor = MaterialTheme.colorScheme.primary
+
+    val bgColor by animateColorAsState(
+        targetValue = when {
+            isSelected -> primaryColor
+            else       -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+        },
+        label = "dayBg"
+    )
+
+    val contentColor by animateColorAsState(
+        targetValue = when {
+            isSelected -> MaterialTheme.colorScheme.onPrimary
+            isToday    -> primaryColor
+            else       -> MaterialTheme.colorScheme.onSurface
+        },
+        label = "dayContent"
+    )
+
+    val border = when {
+        !isSelected && isToday -> BorderStroke(1.5.dp, primaryColor)
+        else                   -> null
+    }
+
+    Surface(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        color = bgColor,
+        border = border
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // День недели (ПН, ВТ...)
+            Text(
+                text = day.dayShortName.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Medium,
+                color = contentColor.copy(alpha = if (isSelected || isToday) 1f else 0.7f),
+                fontSize = 11.sp
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Число (из dateText или номер дня)
+            val dayNumber = extractDayNumber(day.dateText, day.dayIndex)
+            Text(
+                text = dayNumber,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.SemiBold,
+                color = contentColor
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Минималистичная точка-индикатор
+            Box(
+                modifier = Modifier
+                    .size(4.dp)
+                    .clip(CircleShape)
+                    .background(
+                        when {
+                            day.hasReplacements     -> if (isSelected) Color(0xFFFFE082) else Color(0xFFFF9800)
+                            day.lessons.isNotEmpty() -> if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                                                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                            else                    -> Color.Transparent
+                        }
+                    )
+            )
+        }
+    }
+}
+
+private fun extractDayNumber(dateText: String, fallbackIndex: Int): String {
+    val digits = dateText.takeWhile { it.isDigit() }
+    return if (digits.isNotBlank()) digits else fallbackIndex.toString()
 }

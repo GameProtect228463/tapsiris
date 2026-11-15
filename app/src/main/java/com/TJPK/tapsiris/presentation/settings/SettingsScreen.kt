@@ -108,7 +108,44 @@ fun SettingsScreen(
     // Состояния уведомлений
     var notifyBeforeLessons by remember { mutableStateOf(notificationSettings.isRemindersEnabled) }
     var notifyReplacements by remember { mutableStateOf(notificationSettings.isReplacementsEnabled) }
-    var autoSyncSchedule by remember { mutableStateOf(true) }
+    val syncPrefs = remember { context.getSharedPreferences("tapsiris_sync", android.content.Context.MODE_PRIVATE) }
+    var autoSyncSchedule by remember { mutableStateOf(syncPrefs.getBoolean("enabled", true)) }
+    val updatePrefs = remember { com.TJPK.tapsiris.updates.UpdatePreferences(context) }
+    var autoUpdates by remember { mutableStateOf(updatePrefs.enabled) }
+    var githubRepo by remember { mutableStateOf(updatePrefs.repository) }
+    var updateStatus by remember { mutableStateOf("") }
+    var downloadingUpdate by remember { mutableStateOf(false) }
+    var availableRelease by remember { mutableStateOf<com.TJPK.tapsiris.updates.GitHubRelease?>(null) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (autoUpdates && githubRepo.isNotBlank()) {
+            availableRelease = com.TJPK.tapsiris.updates.GitHubUpdateChecker.check(context, githubRepo).getOrNull()
+        }
+    }
+    if (availableRelease != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { availableRelease = null },
+            title = { Text("Доступно обновление") },
+            text = { Text("Версия ${availableRelease?.version}. Скачать APK и перейти к установке?") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    val release = availableRelease
+                    availableRelease = null
+                    if (release != null) coroutineScope.launch {
+                        downloadingUpdate = true
+                        updateStatus = "Скачивание APK..."
+                        val result = com.TJPK.tapsiris.updates.ApkInstaller.download(context, release)
+                        downloadingUpdate = false
+                        result.onSuccess { apk ->
+                            updateStatus = "APK загружен. Подтвердите установку в Android."
+                            runCatching { com.TJPK.tapsiris.updates.ApkInstaller.requestInstall(context, apk) }
+                                .onFailure { updateStatus = "Ошибка установщика: ${it.localizedMessage}" }
+                        }.onFailure { updateStatus = "Ошибка скачивания: ${it.localizedMessage}" }
+                    }
+                }) { Text("Скачать и установить") }
+            },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { availableRelease = null }) { Text("Позже") } }
+        )
+    }
 
     // Состояния диалогов
     var show1CDialog by remember { mutableStateOf(false) }
@@ -239,7 +276,7 @@ fun SettingsScreen(
             SettingsSectionTitle(title = stringResource(R.string.student_profile))
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                 )
@@ -360,7 +397,7 @@ fun SettingsScreen(
             SettingsSectionTitle(title = stringResource(R.string.interface_name))
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                 )
@@ -389,7 +426,7 @@ fun SettingsScreen(
             SettingsSectionTitle(title = stringResource(R.string.notifications_section))
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                 )
@@ -455,7 +492,7 @@ fun SettingsScreen(
             SettingsSectionTitle(title = stringResource(R.string.schedule_parameters))
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                 )
@@ -466,8 +503,45 @@ fun SettingsScreen(
                         title = stringResource(R.string.auto_sync),
                         subtitle = stringResource(R.string.auto_sync_subtitle),
                         checked = autoSyncSchedule,
-                        onCheckedChange = { autoSyncSchedule = it }
+                        onCheckedChange = {
+                            autoSyncSchedule = it
+                            syncPrefs.edit().putBoolean("enabled", it).apply()
+                            com.TJPK.tapsiris.sync.SyncScheduler.configure(context, it)
+                        }
                     )
+                }
+            }
+
+            SettingsSectionTitle(title = "Обновления приложения")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    SettingsSwitchItem(
+                        icon = Icons.Default.Info,
+                        title = "Проверять обновления автоматически",
+                        subtitle = "Проверка GitHub Releases при запуске приложения",
+                        checked = autoUpdates,
+                        onCheckedChange = { autoUpdates = it; updatePrefs.enabled = it }
+                    )
+                    Text("Источник: github.com/GameProtect228463/tapsiris", style = MaterialTheme.typography.bodySmall)
+                    androidx.compose.material3.TextButton(onClick = {
+                        coroutineScope.launch {
+                            updateStatus = "Проверка..."
+                            val result = com.TJPK.tapsiris.updates.GitHubUpdateChecker.check(context, githubRepo)
+                            updateStatus = result.fold(
+                                onSuccess = { release ->
+                                    if (release == null) "Установлена актуальная версия"
+                                    else { availableRelease = release; "Доступна версия ${release.version}" }
+                                },
+                                onFailure = { "Ошибка: ${it.localizedMessage}" }
+                            )
+                        }
+                    }) { Text("Проверить сейчас") }
+                    if (downloadingUpdate) androidx.compose.material3.LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    if (updateStatus.isNotEmpty()) Text(updateStatus, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
@@ -475,7 +549,7 @@ fun SettingsScreen(
             SettingsSectionTitle(title = stringResource(R.string.integration_1c))
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                 )
@@ -494,7 +568,7 @@ fun SettingsScreen(
             SettingsSectionTitle(title = stringResource(R.string.about_app))
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                 )
