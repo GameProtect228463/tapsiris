@@ -28,6 +28,7 @@ import java.net.URL
  * 5. Поддержку вариативного регистра путей URL (/groups и /Groups) в 1С.
  * =========================================================================================
  */
+
 class OneCApiClient(private val config: ServerConfig) {
 
     private fun createConnection(endpointUrl: String): HttpURLConnection {
