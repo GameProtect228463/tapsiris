@@ -42,11 +42,29 @@ object GitHubUpdateChecker {
         }
     }
 
+    /** Compares numeric versions and concept builds, e.g. 0.0.1-concept.4.1. */
     private fun compareVersions(a: String, b: String): Int {
-        fun parts(v: String) = Regex("""^(\d+)\.(\d+)\.(\d+)""").find(v)?.groupValues?.drop(1)?.map { it.toIntOrNull() ?: 0 }
-        val x = parts(a) ?: return 0
-        val y = parts(b) ?: return 0
-        for (i in 0..2) if (x[i] != y[i]) return x[i].compareTo(y[i])
+        val pattern = Regex("""^[vV]?(\d+)\.(\d+)\.(\d+)(?:-concept\.(\d+)(?:\.(\d+))?)?$""")
+
+        fun parse(value: String): List<Long>? {
+            val match = pattern.matchEntire(value.trim()) ?: return null
+            val numbers = match.groupValues.drop(1)
+            val parsed = numbers.take(3).map { it.toLongOrNull() ?: return null }
+            // A stable release is newer than any concept build of the same base version.
+            val isConcept = numbers[3].isNotEmpty()
+            return parsed + if (isConcept) {
+                listOf(0L, numbers[3].toLongOrNull() ?: return null,
+                    numbers[4].ifEmpty { "0" }.toLongOrNull() ?: return null)
+            } else {
+                listOf(1L, 0L, 0L)
+            }
+        }
+
+        val remote = parse(a) ?: return 0
+        val installed = parse(b) ?: return 0
+        for (i in remote.indices) {
+            if (remote[i] != installed[i]) return remote[i].compareTo(installed[i])
+        }
         return 0
     }
 
